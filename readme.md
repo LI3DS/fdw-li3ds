@@ -10,11 +10,9 @@ requirements:
 
 ## installation
 
-	pip install
+	pip install .
 
-or installation in editable mode (for development):
-
-	pip install -e .
+The editable mode could be used for development (add -e to the previous command line)
 
 
 ## testing
