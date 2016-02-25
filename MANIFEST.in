@@ -1,1 +1,3 @@
-recursive-include fdwlidar/data
+include readme.md
+recursive-include fdwlidar *.bin
+recursive-include fdwlidar *.txt
