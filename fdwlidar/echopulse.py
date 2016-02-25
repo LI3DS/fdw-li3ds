@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import io
-from os import path
 from pathlib import Path, PurePath
 from struct import Struct
 from multicorn import ForeignDataWrapper
