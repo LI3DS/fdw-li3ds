@@ -6,24 +6,21 @@ from pathlib import Path, PurePath
 from struct import Struct
 from multicorn import ForeignDataWrapper
 
-root = Path(__file__).resolve().parent
-raw = Path(PurePath(root, 'data/pulse-float32-phi/43724.bin')).resolve()
-theta = Path(PurePath(root, 'data/pulse-float32-theta/43724.bin')).resolve()
-time = Path(PurePath(root, 'data/pulse-linear-time/43724.txt')).resolve()
-
-
 class EchoPulse(ForeignDataWrapper):
-
     def __init__(self, options, columns):
         super().__init__(options, columns)
         self.columns = columns
+        root = Path(__file__).resolve().parent
+        # Get file locations from FDW options
+        self.raw = Path(PurePath(root, options['raw'])).resolve()
+        self.theta = Path(PurePath(root, options['theta'])).resolve()
+        self.time = Path(PurePath(root, options['time'])).resolve()
 
     def execute(self, quals, columns):
-        yield from read_pulse()
+        yield from read_pulse(self.raw, self.theta, self.time)
 
-
-def read_pulse():
-    for r, tta, ti in zip(read_float(raw), read_float(theta), gen_time()):
+def read_pulse(raw, theta, time):
+    for r, tta, ti in zip(read_float(raw), read_float(theta), gen_time(time)):
         yield {'r': r, 'theta': tta, 'time': ti}
 
 
@@ -38,7 +35,7 @@ def read_float(filename):
             yield punp(value)[0]
 
 
-def gen_time():
+def gen_time(time):
     with time.open() as infile:
         line = infile.readline()
     nelem, tstart, delta = [elem.strip() for elem in line.split('|')]
