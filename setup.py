@@ -32,5 +32,6 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.5',
     ],
-    packages=find_packages()
+    packages=find_packages(),
+    package_data={'fdwlidar': ['data/**/*']}
 )
