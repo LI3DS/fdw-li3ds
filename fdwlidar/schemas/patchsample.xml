@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pc:PointCloudSchema xmlns:pc="http://pointcloud.org/schemas/PC/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<pc:dimension>
+    <pc:position>1</pc:position>
+    <pc:size>8</pc:size>
+    <pc:name>m_time</pc:name>
+    <pc:description>seconds of week in GPS time system</pc:description>
+    <pc:interpretation>double</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>2</pc:position>
+    <pc:size>8</pc:size>
+    <pc:name>x</pc:name>
+    <pc:description>x</pc:description>
+    <pc:interpretation>double</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>3</pc:position>
+    <pc:size>8</pc:size>
+    <pc:name>y</pc:name>
+    <pc:description>y</pc:description>
+    <pc:interpretation>double</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>4</pc:position>
+    <pc:size>8</pc:size>size
+    <pc:name>z</pc:name>
+    <pc:description>Z</pc:description>
+    <pc:interpretation>double</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>5</pc:position>
+    <pc:size>8</pc:size>
+    <pc:name>random</pc:name>
+    <pc:description>A random value</pc:description>
+    <pc:interpretation>double</pc:interpretation>
+</pc:dimension>
+</pc:PointCloudSchema>
