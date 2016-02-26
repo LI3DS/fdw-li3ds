@@ -19,7 +19,7 @@ class Sbet(ForeignDataWrapper):
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 100))
         self.metadata = bool(options.get('metadata', False))
-        self.sbetschema = Path(PurePath(root, 'sbetschema.xml')).resolve()
+        self.sbetschema = Path(PurePath(root, 'schemas', 'sbetschema.xml')).resolve()
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table
