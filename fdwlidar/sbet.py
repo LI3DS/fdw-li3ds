@@ -6,30 +6,28 @@ from struct import Struct, pack
 
 from multicorn import ForeignDataWrapper
 
-root = Path(__file__).resolve().parent
-sbetfile = Path(PurePath(root, 'data/sbet.bin')).resolve()
-
 
 class Sbet(ForeignDataWrapper):
 
     def __init__(self, options, columns):
         super().__init__(options, columns)
         self.columns = columns
+        root = Path(__file__).resolve().parent
+        self.sbetfile = Path(PurePath(root, options['filename'])).resolve()
+        # set default patch size to 100 points if not given
+        self.patch_size = int(options.get('patch_size', 100))
 
     def execute(self, quals, columns):
-        yield from read_sbet()
+        yield from read_sbet(self.sbetfile, self.patch_size)
 
 
-def read_sbet():
+def read_sbet(sbetfile, patch_size):
     # scale factor to convert radians to degrees and shifts the 7 decimal digits
     # to encode in uint32
     rad2deg_scaled = 180*1e7 / math.pi
 
     # list of rows to insert into database
     rows = []
-
-    # number of points in a patch
-    PATCH_SIZE = 100
 
     # sbet structure
     item = Struct('<17d')
@@ -42,7 +40,7 @@ def read_sbet():
     # uint32:       0 = no compression
     # uint32:       npoints
     # pointdata[]:  interpret relative to pcid
-    header = pack('<b3I', 1, 1, 0, PATCH_SIZE)
+    header = pack('<b3I', 1, 1, 0, patch_size)
 
     # initialize a patch structure
     point_struct = Struct('<dIII13d')
@@ -67,12 +65,12 @@ def read_sbet():
 
             npoints += 1
 
-            if npoints % PATCH_SIZE == 0 and npoints:
+            if npoints % patch_size == 0 and npoints:
                 # insert a new patch
                 hexa = (header + b''.join(points)).hex()
                 points = []
                 yield {
-                    'patch': hexa
+                    'points': hexa
                 }
 
     # treat points left
@@ -81,5 +79,5 @@ def read_sbet():
         hexa = (header + b''.join(points)).hex()
 
     yield {
-        'patch': hexa
+        'points': hexa
     }

@@ -5,6 +5,7 @@ from pathlib import Path, PurePath
 from struct import Struct
 from multicorn import ForeignDataWrapper
 
+
 class EchoPulse(ForeignDataWrapper):
     def __init__(self, options, columns):
         super().__init__(options, columns)
@@ -17,6 +18,7 @@ class EchoPulse(ForeignDataWrapper):
 
     def execute(self, quals, columns):
         yield from read_pulse(self.raw, self.theta, self.time)
+
 
 def read_pulse(raw, theta, time):
     for r, tta, ti in zip(read_float(raw), read_float(theta), gen_time(time)):
@@ -43,8 +45,3 @@ def gen_time(time):
     delta = float(delta)
     for i in range(nelem):
         yield (tstart + delta * i)
-
-
-if __name__ == '__main__':
-    # debug
-    print(list(read_pulse())[:2])
