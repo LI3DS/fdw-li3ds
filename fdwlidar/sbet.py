@@ -3,6 +3,7 @@
 import math
 from pathlib import Path, PurePath
 from struct import Struct, pack
+from binascii import hexlify
 
 from multicorn import ForeignDataWrapper
 
@@ -67,7 +68,7 @@ def read_sbet(sbetfile, patch_size):
 
             if npoints % patch_size == 0 and npoints:
                 # insert a new patch
-                hexa = (header + b''.join(points)).hex()
+                hexa = hexlify(header + b''.join(points))
                 points = []
                 yield {
                     'points': hexa
@@ -76,7 +77,7 @@ def read_sbet(sbetfile, patch_size):
     # treat points left
     if points:
         header = pack('<b3I', *[1, 1, 0, len(points)])
-        hexa = (header + b''.join(points)).hex()
+        hexa = hexlify(header + b''.join(points))
 
     yield {
         'points': hexa

@@ -4,7 +4,7 @@ Tool to access some lidar data from sql.
 
 ## Prerequisites
 
-- python 3
+- python >= 3.4
 - multicorn
 - pip
 
