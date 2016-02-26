@@ -18,10 +18,21 @@ class Sbet(ForeignDataWrapper):
         self.sbetfile = Path(PurePath(root, options['filename'])).resolve()
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 100))
+        self.metadata = bool(options.get('metadata', False))
+        self.sbetschema = Path(PurePath(root, 'sbetschema.xml')).resolve()
 
     def execute(self, quals, columns):
-        yield from read_sbet(self.sbetfile, self.patch_size)
-
+        # When the metadata parameter has been passed to the foreign table
+        # creation, we send metadata instead of data itself
+        # This way we will be able to implement IMPORT FOREIGN SCHEMA for
+        # both tables ( data / metadata ) at the same time
+        if self.metadata is True:
+            schema = ''
+            with self.sbetschema.open() as f:
+                schema = f.read()
+            yield 4326, schema
+        else:
+            yield from read_sbet(self.sbetfile, self.patch_size)
 
 def read_sbet(sbetfile, patch_size):
     # scale factor to convert radians to degrees and shifts the 7 decimal digits
