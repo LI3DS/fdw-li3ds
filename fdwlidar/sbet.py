@@ -6,6 +6,7 @@ from struct import Struct, pack
 from binascii import hexlify
 
 from multicorn import ForeignDataWrapper
+from multicorn.utils import log_to_postgres
 
 
 class Sbet(ForeignDataWrapper):
