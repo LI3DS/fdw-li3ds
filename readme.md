@@ -5,6 +5,7 @@ Tool to access some lidar data from sql.
 ## Prerequisites
 
 - python >= 3.4
+- numpy
 - multicorn
 - pip
 
@@ -17,7 +18,7 @@ sudo apt-get install wget ca-certificates
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install python3 python3-dev postgresql-9.5 postgresql-server-dev-9.5
+sudo apt-get install python3 python3-dev postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
 ```
 
 Compile and install Multicorn
@@ -31,13 +32,21 @@ sudo PYTHON_OVERRIDE=python3 make install
 
 ## Installation
 
-	sudo pip3 install
+Clone repository and execute:
+
+	sudo pip3 install .
 
 or installation in editable mode (for development):
 
 	sudo pip3 install -e .
 
 ## testing
+
+Load  the pointcloud extension in order to have the pcpatch type available.
+
+```sql
+create extension if not exists pointcloud;
+```
 
 ### Custom EchoPulse format
 
@@ -50,15 +59,26 @@ create server echopulse foreign data wrapper multicorn
         wrapper 'fdwpointcloud.EchoPulse'
     );
 
+-- create foreign table to retrieve the pointcloud schema dynamically
+create foreign table myechopulse_schema (
+    schema text
+)
+server echopulse
+ options (
+    directory 'data/echopulse'
+    metadata 'true',
+);
+
+insert into pointcloud_formats(pcid, srid, schema)
+select 1, -1, schema from myechopulse_schema;
+
 create foreign table myechopulse (
-    r float
-    , theta float
-    , time float
+    points pcpatch(1)
 ) server echopulse
     options (
-        raw 'data/pulse-float32-phi/43724.bin'
-        , theta 'data/pulse-float32-theta/43724.bin'
-        , time 'data/pulse-linear-time/43724.txt'
+    directory 'data/echopulse'
+    , patch_size '400'
+    , pcid '1'
 );
 
 select * from myechopulse;
@@ -66,29 +86,50 @@ select * from myechopulse;
 
 ### Sbet files
 
-Pointcloud's patch creation on the fly example
-pgpoincloud extension is needed:
-
-```sql
-create extension if not exists pointcloud;
-```
-
-Load sbet schema into pointcloud_formats, an example is given in fdw/data/sbetschema.sql
-
 ```sql
 create server sbetserver foreign data wrapper multicorn
     options (
         wrapper 'fdwpointcloud.Sbet'
     );
 
+create foreign table mysbet_schema (
+    schema text
+)
+server route_server
+ options (
+    sources 'data/sbet'
+    , metadata 'true'
+);
+
+insert into pointcloud_formats (pcid, srid, schema)
+select 2, 4326, schema from mysbet_schema;
+
 create foreign table mysbet (
-    points pcpatch(1)
+    points pcpatch(2)
 ) server sbetserver
     options (
-        filename 'data/sbet.bin'
+        sources 'data/sbet.bin'
         , patch_size '100'
+        , pcid '2'
 );
+
 
 select * from mysbet;
 
 ```
+
+
+## Python tests
+
+Pytest is required to launch unit tests.
+
+```bash
+pip install -e .[dev]
+```
+
+Launch tests:
+
+```bash
+py.test
+```
+
