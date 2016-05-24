@@ -51,6 +51,10 @@ class Sbet(ForeignDataWrapper):
         return content
 
     def execute(self, quals, columns):
+        # When the metadata parameter has been passed to the foreign table
+        # creation, we send metadata instead of data itself
+        # This way we will be able to implement IMPORT FOREIGN SCHEMA for
+        # both tables ( data / metadata ) at the same time
         if self.metadata:
             yield {'schema': self.read_pcschema()}
             return
