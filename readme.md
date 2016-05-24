@@ -47,7 +47,7 @@ create extension multicorn;
 
 create server echopulse foreign data wrapper multicorn
     options (
-        wrapper 'fdwlidar.EchoPulse'
+        wrapper 'fdwpointcloud.EchoPulse'
     );
 
 create foreign table myechopulse (
@@ -78,7 +78,7 @@ Load sbet schema into pointcloud_formats, an example is given in fdw/data/sbetsc
 ```sql
 create server sbetserver foreign data wrapper multicorn
     options (
-        wrapper 'fdwlidar.Sbet'
+        wrapper 'fdwpointcloud.Sbet'
     );
 
 create foreign table mysbet (

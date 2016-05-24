@@ -22,9 +22,9 @@ def find_version(*file_paths):
                        "Should be at the first line of __init__.py.")
 
 setup(
-    name='fdwlidar',
-    version=find_version('fdwlidar', '__init__.py'),
-    description="fdwlidar",
+    name='fdwpointcloud',
+    version=find_version('fdwpointcloud', '__init__.py'),
+    description="fdwpointcloud",
     url='',
     author='oslandia',
     author_email='contact@oslandia.com',
@@ -33,5 +33,5 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     packages=find_packages(),
-    package_data={'fdwlidar': ['data/**/*']}
+    package_data={'fdwpointcloud': ['data/**/*']}
 )
