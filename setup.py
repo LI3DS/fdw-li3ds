@@ -5,6 +5,11 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 
+DEV_REQUIRES = (
+    'pytest'
+)
+
+
 def find_version(*file_paths):
     """
     see https://github.com/pypa/sampleproject/blob/master/setup.py
@@ -33,5 +38,8 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     packages=find_packages(),
+    extras_require={
+        'dev': DEV_REQUIRES,
+    },
     package_data={'fdwpointcloud': ['data/**/*']}
 )
