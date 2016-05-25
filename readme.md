@@ -97,8 +97,7 @@ create foreign table mysbet_schema (
 )
 server route_server
  options (
-    sources 'data/sbet'
-    , metadata 'true'
+    metadata 'true'
 );
 
 insert into pointcloud_formats (pcid, srid, schema)

@@ -8,31 +8,29 @@ create extension if not exists multicorn;
 drop server if exists sbetserver cascade;
 create server sbetserver foreign data wrapper multicorn
 options (
-    wrapper 'fdwlidar.Sbet'
+    wrapper 'fdwpointcloud.Sbet'
 );
 
 -- Get the metadata for Sbet
 -- Currently static, but could be computed given the file
 create foreign table mysbet_schema (
-    srid int
-    , schema text
+    schema text
 ) server sbetserver
 options (
-    filename 'data/sbet.bin'
-    , metadata 'true'
+    metadata 'true'
 );
 
 -- Insert the schema into the pointcloud formats table
 truncate pointcloud_formats;
 insert into pointcloud_formats (pcid, srid, schema)
-select 1, srid, schema from mysbet_schema;
+select 1, 4326, schema from mysbet_schema;
 
 -- The data table
 create foreign table mysbet (
     points pcpatch(1)
 ) server sbetserver
 options (
-    filename 'data/sbet.bin'
+    sources 'data/sbet/*.bin'
     , patch_size '100'
 );
 

@@ -25,15 +25,16 @@ class Sbet(ForeignDataWrapper):
     def __init__(self, options, columns):
         super().__init__(options, columns)
         self.columns = columns
-        self.sources = [
-            Path(source).resolve()
-            for source in glob(options['sources'])
-        ]
-        log_to_postgres('{} sbet file(s) linked'.format(len(self.sources)))
+        if 'sources' in options:
+            self.sources = [
+                Path(source).resolve()
+                for source in glob(options['sources'])
+            ]
+            log_to_postgres('{} sbet file(s) linked'.format(len(self.sources)))
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 100))
-        # pcschema.xml must be present in the directory
-        self.pcschema = Path(options['sources']) / 'pcschema.xml'
+        # sbet schema is provided
+        self.pcschema = Path(__file__).parent / 'schemas' / 'sbetschema.xml'
         # pcid used to create WKB patchs
         self.pcid = int(options.get('pcid', 0))
         # next option is used to retrieve pcschema.xml back to postgres

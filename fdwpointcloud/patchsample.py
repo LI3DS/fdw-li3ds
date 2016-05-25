@@ -12,10 +12,11 @@ from struct import Struct, pack
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres
 
+
 class PatchSample(ForeignDataWrapper):
     """PatchSample is a PostgreSQL multicorn foreign data wrapper
     generating a grid of pgPointCloud PCPatch rows.
-    Options : 
+    Options :
         - npx : number of patches on x
         - npy : number of patches on y
         - nppp : number of point per patch
@@ -32,6 +33,7 @@ class PatchSample(ForeignDataWrapper):
     def execute(self, quals, columns):
         yield from gen_patches(self.npx, self.npy, self.nppp, self.space)
 
+
 def gen_patches(npx, npy, nppp, space):
 
     # PCPatch structure
@@ -42,7 +44,7 @@ def gen_patches(npx, npy, nppp, space):
     # uint32:       0 = no compression
     # uint32:       npoints
     # pointdata[]:  interpret relative to pcid
-    # 
+    #
     # TODO : the pcid should be taken from column definition
     header = pack('<b3I', 1, 1, 0, nppp)
 
@@ -61,11 +63,13 @@ def gen_patches(npx, npy, nppp, space):
             points = []
             for k in range(pppsqrt):
                 for l in range(pppsqrt):
-                    points.append(pack_point(time.time(), 
-                        i * pppsqrt * space + k * space
-                        , j * pppsqrt * space + l * space
-                        , 0.0
-                        , random.random()))
+                    points.append(
+                        pack_point(
+                            time.time(),
+                            i * pppsqrt * space + k * space,
+                            j * pppsqrt * space + l * space,
+                            0.0,
+                            random.random()))
             hexa = hexlify(header + b''.join(points))
             yield {
                     'points': hexa
@@ -73,5 +77,5 @@ def gen_patches(npx, npy, nppp, space):
 
 if __name__ == '__main__':
     # Test py calling the script from interpreter
-    p = PatchSample({'npx':10, 'npy':10, 'nppp':100, 'space':1}, {})
+    p = PatchSample({'npx': 10, 'npy': 10, 'nppp': 100, 'space': 1}, {})
     print(list(p.execute([], {})))
