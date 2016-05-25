@@ -5,7 +5,6 @@
 - python >= 3.4
 - numpy
 - multicorn
-- pip
 
 ### Install under Ubuntu
 
