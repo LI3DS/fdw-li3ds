@@ -225,7 +225,8 @@ class EchoPulse(ForeignDataWrapper):
             for idx in range(ne)],
             dtype='uint8')
         # apply zero insert
-        echo_arrays['echo'] = np.insert(values, zero_indices, 0).astype('uint8')
+        echo_arrays['echo'] = np.insert(
+            echo_arrays['echo'], zero_indices, 0).astype('uint8')
 
         # Duplicate all items in pulse arrays according to num_echoes number
         # We must create a copy of num_echoes array with zero values replaced by 1
