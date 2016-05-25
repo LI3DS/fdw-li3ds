@@ -104,7 +104,7 @@ class EchoPulse(ForeignDataWrapper):
 
         # sort on signal and datatype
         directories.sort(
-            key=lambda x: (x[1], x[2] == 'linear', x[3] == 'n_echo'),
+            key=lambda x: (x[1], x[2] == 'linear', x[3] == 'num_echoes'),
             reverse=True
         )
 
@@ -206,7 +206,8 @@ class EchoPulse(ForeignDataWrapper):
 
         echo_arrays = {}
         echos = frame['echo']
-        vec_echo = pulse_arrays['n_echo']
+
+        vec_echo = pulse_arrays['num_echoes']
         nechos = np.sum(vec_echo)
 
         # get zero indices and scale to indices in echo space !
@@ -217,17 +218,26 @@ class EchoPulse(ForeignDataWrapper):
             values = np.fromfile(filename.path, dtype=datatype, count=nechos)
             echo_arrays[name] = np.insert(values, zero_indices, 0)
 
-        # Duplicate all items in pulse arrays according to n_echo number
-        # We must create a copy of n_echo array with zero values replaced by 1
+        # add the echo index as a new dimension
+        echo_arrays['echo'] = np.fromiter([
+            idx
+            for ne in vec_echo
+            for idx in range(ne)],
+            dtype='uint8')
+        # apply zero insert
+        echo_arrays['echo'] = np.insert(values, zero_indices, 0).astype('uint8')
+
+        # Duplicate all items in pulse arrays according to num_echoes number
+        # We must create a copy of num_echoes array with zero values replaced by 1
         # in order to repeat correctly items without deleting zero items
-        n_echo_copy = pulse_arrays['n_echo'].copy()
+        num_echoes_copy = pulse_arrays['num_echoes'].copy()
 
         # remove zero value in order to use the repeat function without deleting rows
-        n_echo_copy[n_echo_copy == 0] = 1
+        num_echoes_copy[num_echoes_copy == 0] = 1
 
         # duplicate rows having more than 1 echoe
         for name, p in pulse_arrays.items():
-            pulse_arrays[name] = pulse_arrays[name].repeat(n_echo_copy)
+            pulse_arrays[name] = pulse_arrays[name].repeat(num_echoes_copy)
 
         pulse_arrays.update(echo_arrays)
         # return ordered arrays according to xml schema

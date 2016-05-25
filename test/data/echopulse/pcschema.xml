@@ -45,17 +45,24 @@
 </pc:dimension>
 <pc:dimension>
     <pc:position>7</pc:position>
-    <pc:size>1</pc:size>
-    <pc:name>n_echo</pc:name>
-    <pc:description>number of echos</pc:description>
-    <pc:interpretation>int8_t</pc:interpretation>
-</pc:dimension>
-<pc:dimension>
-    <pc:position>8</pc:position>
     <pc:size>4</pc:size>
     <pc:name>amplitude</pc:name>
     <pc:description>amplitude</pc:description>
     <pc:interpretation>float32</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>8</pc:position>
+    <pc:size>1</pc:size>
+    <pc:name>num_echoes</pc:name>
+    <pc:description>number of echoes</pc:description>
+    <pc:interpretation>int8_t</pc:interpretation>
+</pc:dimension>
+<pc:dimension>
+    <pc:position>9</pc:position>
+    <pc:size>1</pc:size>
+    <pc:name>echo</pc:name>
+    <pc:description>echo index</pc:description>
+    <pc:interpretation>int8_t</pc:interpretation>
 </pc:dimension>
 <pc:metadata>
     <Metadata name="compression">dimensional</Metadata>
