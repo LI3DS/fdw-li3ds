@@ -176,7 +176,7 @@ class EchoPulse(ForeignDataWrapper):
             for subarray in slices:
                 buff = [
                     pack('<bI', 0, values.nbytes) +  # header for each dimension
-                    values.tobytes()  # data content
+                    values.tostring()  # data content
                     for _, att in att_array
                     for values in [att[subarray]]
                 ]
