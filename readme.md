@@ -1,6 +1,4 @@
-# Foreign Data Wrapper for reading lidar data
-
-Tool to access some lidar data from sql.
+# Foreign Data Wrapper for pointcloud data
 
 ## Prerequisites
 
