@@ -30,17 +30,17 @@ sudo PYTHON_OVERRIDE=python3 make install
 
 ## Installation
 
-Clone repository and execute:
+Clone repository and install with:
 
 	sudo pip3 install .
 
-or installation in editable mode (for development):
+or install in editable mode (for development):
 
 	sudo pip3 install -e .
 
-## testing
+## Testing
 
-Load  the pointcloud extension in order to have the pcpatch type available.
+Load the pointcloud extension in order to have the pcpatch type available.
 
 ```sql
 create extension if not exists pointcloud;
@@ -116,7 +116,7 @@ select * from mysbet;
 ```
 
 
-## Python tests
+## Unit tests
 
 Pytest is required to launch unit tests.
 
