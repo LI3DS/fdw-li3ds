@@ -197,7 +197,7 @@ class EchoPulse(ForeignDataWrapper):
         # initialize pulse array for this file
         pulse_arrays = {}
         for (datatype, name), filename in pulses.items():
-            values = np.fromfile(filename.path, dtype=datatype, count=nentries)
+            values = np.fromfile(str(filename), dtype=datatype, count=nentries)
             pulse_arrays[name] = values
 
         # compute time values and reference it
@@ -215,7 +215,7 @@ class EchoPulse(ForeignDataWrapper):
         zero_indices = vec_echo.cumsum()[vec_echo == 0].astype('int64')
 
         for (datatype, name), filename in echos.items():
-            values = np.fromfile(filename.path, dtype=datatype, count=nechos)
+            values = np.fromfile(str(filename), dtype=datatype, count=nechos)
             echo_arrays[name] = np.insert(values, zero_indices, 0)
 
         # add the echo index as a new dimension
