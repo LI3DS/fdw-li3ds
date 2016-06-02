@@ -17,8 +17,9 @@ subtree_pattern = re.compile(r'^(echo|pulse)-([\w\d]+)-(.*)$')
 # since pgpointcloud requires x and y dimensions we don't have them
 # on raw data so we map the couple (x,y) to some raw dimensions
 pcschema2raw = {
-    'x': 'range',
-    'y': 'theta'
+    'x': 'time',
+    'y': 'theta',
+    'z': 'range'
 }
 
 

@@ -4,22 +4,22 @@
 <pc:dimension>
     <pc:position>1</pc:position>
     <pc:size>8</pc:size>
-    <pc:name>time</pc:name>
+    <pc:name>x</pc:name>
     <pc:description>seconds of week in GPS time system</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>2</pc:position>
     <pc:size>4</pc:size>
-    <pc:name>x</pc:name>
-    <pc:description>range</pc:description>
+    <pc:name>y</pc:name>
+    <pc:description>theta</pc:description>
     <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>3</pc:position>
     <pc:size>4</pc:size>
-    <pc:name>y</pc:name>
-    <pc:description>theta</pc:description>
+    <pc:name>z</pc:name>
+    <pc:description>range</pc:description>
     <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>

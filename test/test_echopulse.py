@@ -44,7 +44,7 @@ def test_read_schema(schema):
 
 def test_dimension_list(schema):
     assert schema.dimensions == [
-        'time', 'x', 'y', 'phi',
+        'x', 'y', 'z', 'phi',
         'reflectance', 'deviation', 'amplitude', 'num_echoes', 'echo'
     ]
 
