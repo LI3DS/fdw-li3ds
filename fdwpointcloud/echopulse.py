@@ -50,6 +50,8 @@ class EchoPulse(ForeignDataWrapper):
         self.pcid = int(options.get('pcid', 0))
         # next option is used to retrieve pcschema.xml back to postgres
         self.metadata = options.get('metadata', False)
+        # get time offset if provided
+        self.time_offset = float(options.get('time_offset', 0))
 
     def read_pcschema(self):
         """
@@ -77,6 +79,26 @@ class EchoPulse(ForeignDataWrapper):
         """
         Called each time a request is made on the foreign table.
         Yields each row as a mapping of column: value
+
+        All directories corresponding to an attribute are scanned first, then
+        all files are ordered by time (one file defines one second of acquisition).
+        A dataframe is composed of a data file for each attribute.
+
+        Here is an example of the dataframe structure:
+        [
+            {
+                'pulse':
+                    {('linear', 'time'): '1.txt', ('float32', 'phi'): '1.bin', },
+                'echo':
+                    {('float32', 'amplitude'): '1.txt', ('float32', 'range'): '1.bin', },
+            },
+            {
+                'pulse':
+                    {('linear', 'time'): '2.txt', ('float32', 'phi'): '2.bin', },
+                'echo':
+                    {('float32', 'amplitude'): '2.txt', ('float32', 'range'): '2.bin', },
+            },
+        ]
         """
         if self.metadata:
             yield {'schema': self.read_pcschema()}
@@ -115,21 +137,6 @@ class EchoPulse(ForeignDataWrapper):
 
         framelist = []
 
-        # arrange a list for each data frame (ordered by time):
-        # [
-        # {
-        #     'pulse':
-        #         {('linear', 'time'): '1.txt', ('float32', 'phi'): '1.bin', },
-        #     'echo':
-        #         {('float32', 'amplitude'): '1.txt', ('float32', 'range'): '1.bin', },
-        # },
-        # {
-        #     'pulse':
-        #         {('linear', 'time'): '2.txt', ('float32', 'phi'): '2.bin', },
-        #     'echo':
-        #         {('float32', 'amplitude'): '2.txt', ('float32', 'range'): '2.bin', },
-        # },
-        # ]
         for idx in range(source_files_count.pop()):
             framelist.append(defaultdict(dict))
             for sdir, signal, datatype, name, filelist in directories:
@@ -203,7 +210,7 @@ class EchoPulse(ForeignDataWrapper):
 
         # compute time values and reference it
         pulsetime = pulse_arrays['time'] = np.arange(nentries, dtype='float64')
-        pulsetime += t0 + pulsetime * delta
+        pulsetime += t0 + pulsetime * delta + self.time_offset
 
         echo_arrays = {}
         echos = frame['echo']
