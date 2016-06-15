@@ -198,7 +198,7 @@ class EchoPulse(ForeignDataWrapper):
         with timefile.open('r') as tfile:
             nentries, _, t0, _, delta, _ = tfile.readline().split()
             nentries = int(nentries)
-            t0 = float(t0)
+            t0 = float(t0) + self.time_offset
             delta = float(delta)
 
         # we have to read nentries in pulse files, let's go
@@ -209,8 +209,10 @@ class EchoPulse(ForeignDataWrapper):
             pulse_arrays[name] = values
 
         # compute time values and reference it
-        pulsetime = pulse_arrays['time'] = np.arange(nentries, dtype='float64')
-        pulsetime += t0 + pulsetime * delta + self.time_offset
+        pulsetime = pulse_arrays['time'] = (
+            np.ones(nentries, dtype='float64') * t0
+            + np.arange(nentries, dtype='float64') * delta
+        )
 
         echo_arrays = {}
         echos = frame['echo']
