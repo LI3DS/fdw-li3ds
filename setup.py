@@ -41,5 +41,5 @@ setup(
     extras_require={
         'dev': DEV_REQUIRES,
     },
-    package_data={'fdwpointcloud': ['data/**/*']}
+    package_data={'fdwpointcloud': ['schemas/*']}
 )
