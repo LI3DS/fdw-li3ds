@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
 from binascii import unhexlify
-import xml.etree.ElementTree as etree
 
+import numpy as np
 import pytest
 
 from fdwpointcloud import EchoPulse
@@ -12,11 +12,24 @@ data_dir = Path(__file__).parent / 'data' / 'echopulse'
 
 
 @pytest.fixture
-def data(scope='module'):
+def reader(scope='module'):
     ept = EchoPulse(
         options={
             'directory': data_dir,
             'pcid': '1'
+        },
+        columns=None
+    )
+    return ept
+
+
+@pytest.fixture
+def reader_offset(scope='module'):
+    ept = EchoPulse(
+        options={
+            'directory': data_dir,
+            'pcid': '1',
+            'time_offset': '1300000'
         },
         columns=None
     )
@@ -43,23 +56,48 @@ def test_read_schema(schema):
 
 
 def test_dimension_list(schema):
-    assert schema.dimensions == [
-        'x', 'y', 'z', 'phi',
-        'reflectance', 'deviation', 'amplitude', 'num_echoes', 'echo'
+    assert [dim.name for dim in schema.dimensions] == [
+        'x', 'y', 'z',
+        'phi', 'reflectance', 'deviation', 'amplitude', 'num_echoes', 'echo'
     ]
 
 
-def test_patch_size(schema, data):
-    schema = next(schema.execute(None, None))
-    root = etree.fromstring(schema['schema'])
+def test_patch_size(reader):
     # get size for each dimension in metadata
     size_list = [
-        int(elem.text)
-        for elem in root.iter('{http://pointcloud.org/schemas/PC/1.1}size')
+        int(dim.size)
+        for dim in reader.dimensions
     ]
-    # get fisst patch
-    patch = next(data.execute(None, None))
-    # 5 bytes for each dimension header
-    # 13 bytes for the patch header
-    size = 13 + sum([5 + data.patch_size * size for size in size_list])
+    # get first patch
+    patch = next(reader.execute(None, None))
+    # header of 5 bytes for each dimension
+    # header of 13 bytes for the patch
+    size = 13 + sum([5 + reader.patch_size * size for size in size_list])
     assert len(unhexlify(patch['points'])) == size
+
+
+def test_point_count(reader):
+    """
+    All patch must have the correct number of points
+    """
+    allpatch = list(reader.execute(None, None))
+    allpatch_size = sum([
+        len(unhexlify(patch['points']))
+        - 13  # remove header part
+        - 5 * len(reader.dimensions)  # remove the 5 bytes for each dimensions
+        for patch in allpatch
+    ])
+    point_size = sum(int(dim.size) for dim in reader.dimensions)
+    assert int(allpatch_size / point_size) == 293679
+
+
+def test_time_offset(reader_offset, reader):
+    patch = next(reader.execute(None, None))
+    patch_offset = next(reader_offset.execute(None, None))
+    patch_nohead = unhexlify(patch['points'])[18:]
+    patch_offset_nohead = unhexlify(patch_offset['points'])[18:]
+    # read first dim (should be X -> time, hardcoded here)
+    x_dim = [(dim.size, dim.type) for dim in reader.dimensions if dim.name == 'x'][0]
+    values = np.fromstring(patch_nohead, dtype=x_dim[1], count=int(x_dim[0]))
+    values_offset = np.fromstring(patch_offset_nohead, dtype=x_dim[1], count=int(x_dim[0]))
+    assert float(values_offset[0] - values[0]) == 1300000

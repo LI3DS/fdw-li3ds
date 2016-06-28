@@ -13,7 +13,7 @@
     <pc:size>4</pc:size>
     <pc:name>y</pc:name>
     <pc:description>latitude</pc:description>
-    <pc:interpretation>int32_t</pc:interpretation>
+    <pc:interpretation>int32</pc:interpretation>
     <pc:scale>0.0000001</pc:scale>
 </pc:dimension>
 <pc:dimension>
@@ -21,7 +21,7 @@
     <pc:size>4</pc:size>
     <pc:name>x</pc:name>
     <pc:description>longitude</pc:description>
-    <pc:interpretation>int32_t</pc:interpretation>
+    <pc:interpretation>int32</pc:interpretation>
     <pc:scale>0.0000001</pc:scale>
 </pc:dimension>
 <pc:dimension>
@@ -29,7 +29,7 @@
     <pc:size>4</pc:size>
     <pc:name>z</pc:name>
     <pc:description>height in meters</pc:description>
-    <pc:interpretation>int32_t</pc:interpretation>
+    <pc:interpretation>int32</pc:interpretation>
     <pc:scale>0.01</pc:scale>
 </pc:dimension>
 <pc:dimension>

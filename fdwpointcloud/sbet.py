@@ -5,26 +5,30 @@ from pathlib import Path
 from glob import glob
 from struct import Struct, pack
 from binascii import hexlify
+import xml.etree.ElementTree as etree
 
+import numpy as np
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres
 
+from .foreignpc import ForeignPcBase
 
-class Sbet(ForeignDataWrapper):
+
+class Sbet(ForeignPcBase):
     """
     Main class for sbet file format reading.
     Sbet stands for Smoothed Best Estimate of Trajectory.
     Sbet is the output format of POSPac post processing.
     POSPac is a popular Applanix program that post processes GPS and inertial data.
 
-    option list available for the foreign table:
+    Options:
 
         - sources: file glob pattern for source files (ex: *.sbet)
         - patch_size: how many points sewing in a patch
     """
     def __init__(self, options, columns):
         super().__init__(options, columns)
-        self.columns = columns
+
         if 'sources' in options:
             self.sources = [
                 Path(source).resolve()
@@ -35,23 +39,6 @@ class Sbet(ForeignDataWrapper):
         self.patch_size = int(options.get('patch_size', 100))
         # sbet schema is provided
         self.pcschema = Path(__file__).parent / 'schemas' / 'sbetschema.xml'
-        # pcid used to create WKB patchs
-        self.pcid = int(options.get('pcid', 0))
-        # next option is used to retrieve pcschema.xml back to postgres
-        self.metadata = options.get('metadata', False)
-        # get time offset if provided
-        self.time_offset = float(options.get('time_offset', 0))
-
-    def read_pcschema(self):
-        """
-        Read pointcloud XML schema and returns its content.
-        The schema document format used by PostgreSQL Pointcloud is the same one
-        used by the PDAL library.
-        """
-        content = ''
-        with self.pcschema.open() as f:
-            content = f.read()
-        return content
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table
@@ -66,61 +53,64 @@ class Sbet(ForeignDataWrapper):
             yield from self.read_sbet(source, self.patch_size, self.pcid)
 
     def read_sbet(self, sbetfile, patch_size, pcid):
-        # scale factor to convert radians to degrees and shifts the 7 decimal digits
-        # to encode in uint32
-        rad2deg_scaled = 180*1e7 / math.pi
+        """
+        Read a sbet file and yield patches.
 
-        # list of rows to insert into database
-        rows = []
+        Patch binary structure:
 
-        # sbet structure
-        item = Struct('<17d')
-        item_size = 17*8
-        unp = item.unpack
+            patch binary structure for WKB encoding
+            byte:         endianness (1 = NDR, 0 = XDR)
+            uint32:       pcid (key to POINTCLOUD_SCHEMAS)
+            uint32:       0 = no compression
+            uint32:       npoints
+            pointdata[]:  interpret relative to pcid
+            header = pack('<b3I', 1, pcid, 0, patch_size)
+        """
 
-        # patch binary structure for WKB encoding
-        # byte:         endianness (1 = NDR, 0 = XDR)
-        # uint32:       pcid (key to POINTCLOUD_SCHEMAS)
-        # uint32:       0 = no compression
-        # uint32:       npoints
-        # pointdata[]:  interpret relative to pcid
-        header = pack('<b3I', 1, pcid, 0, patch_size)
+        # get scaling factors for x, y, z coordinates
+        scale_x = float([
+            dim.scale for dim in self.dimensions
+            if dim.name.lower() == 'x'][0])
+        scale_y = float([
+            dim.scale for dim in self.dimensions
+            if dim.name.lower() == 'y'][0])
+        scale_z = float([
+            dim.scale for dim in self.dimensions
+            if dim.name.lower() == 'z'][0])
 
-        # initialize a patch structure
-        point_struct = Struct('<dIII13d')
-        pack_point = point_struct.pack
+        # apply conversion from radian to degrees for x, y only
+        rad2deg_scaled_x = 180 / math.pi / scale_x
+        rad2deg_scaled_y = 180 / math.pi / scale_y
 
-        # number of points read
-        npoints = 0
-        # staging points in WKB format
-        points = []
-        pappend = points.append
+        # store numpy structured types
+        sbet_source_type = [(dim.name, 'double') for dim in self.dimensions]
+        sbet_patch_type = [(dim.name, dim.type) for dim in self.dimensions]
 
-        with sbetfile.open('rb') as sbet:
-            while True:
-                data = sbet.read(item_size)
-                if not data:
-                    break
-                point = list(unp(data))
+        # open file as a memory map in Copy-on-write mode
+        # (assignments affect data in memory, but changes are not saved to disk.
+        # The file on disk is read-only)
+        sbet = np.memmap(str(sbetfile), dtype=sbet_source_type, mode='c')
+        sbet_size = len(sbet)
+        # constructs slices according to patch_size
+        slices = [
+            slice(a, b)
+            for a, b in zip(
+                range(0, sbet_size, self.patch_size),
+                range(self.patch_size, sbet_size, self.patch_size)
+            )
+        ]
+        if slices[-1].stop != sbet_size:
+            # append the end of the array
+            slices.append(slice(slices[-1].stop, sbet_size))
 
-                point[1] = int(point[1] * rad2deg_scaled)
-                point[2] = int(point[2] * rad2deg_scaled)
-                point[3] = int(point[3] / 0.01)
-                # apply time offset
-                point[0] += self.time_offset
-                pappend(pack_point(*point))
-
-                npoints += 1
-
-                if npoints % patch_size == 0 and npoints:
-                    # insert a new patch
-                    hexa = hexlify(header + b''.join(points))
-                    points.clear()
-                    yield {'points': hexa}
-
-        # treat points left
-        if points:
-            header = pack('<b3I', *[1, 1, 0, len(points)])
-            hexa = hexlify(header + b''.join(points))
-
-        yield {'points': hexa}
+        for sli in slices:
+            subarray = sbet[sli]
+            # convert to degrees and apply scale factor
+            subarray['x'] = rad2deg_scaled_x * subarray['x']
+            subarray['y'] = rad2deg_scaled_x * subarray['y']
+            subarray['z'] = subarray['z'] / scale_z
+            subarray['m_time'] += self.time_offset
+            # cast to pointcloud xml schema types
+            subarray = subarray.astype(sbet_patch_type)
+            header = pack('<b3I', 1, self.pcid, 0, sli.stop - sli.start)
+            yield {'points': hexlify(header + subarray.tostring())}

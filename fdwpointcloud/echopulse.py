@@ -3,13 +3,16 @@
 import re
 from pathlib import Path
 from struct import pack
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import xml.etree.ElementTree as etree
 from binascii import hexlify
+from itertools import zip_longest
 
 import numpy as np
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres
+
+from .foreignpc import ForeignPcBase
 
 # pattern for the echo/pulse schema directory
 subtree_pattern = re.compile(r'^(echo|pulse)-([\w\d]+)-(.*)$')
@@ -22,8 +25,13 @@ pcschema2raw = {
     'z': 'range'
 }
 
+# used to store dimension details
+dimension = namedtuple('dimensions', ['name', 'size', 'type', 'scale'])
 
-class EchoPulse(ForeignDataWrapper):
+PC_NAMESPACE = '{http://pointcloud.org/schemas/PC/1.1}'
+
+
+class EchoPulse(ForeignPcBase):
     """
     Foreign class for the Echo/Pulse/Table format
     """
@@ -33,47 +41,17 @@ class EchoPulse(ForeignDataWrapper):
         statement
         """
         super().__init__(options, columns)
-        self.columns = columns
         # Resolve data files found in directory
         self.source_dirs = [
             source.resolve()
             for source in Path(options['directory']).iterdir()
             if source.is_dir() and subtree_pattern.match(source.name)
         ]
-        log_to_postgres('{} echo/pulse directories linked'
-                        .format(len(self.source_dirs)))
-        # set default patch size to 100 points if not given
-        self.patch_size = int(options.get('patch_size', 400))
         # pcschema.xml must be present in the directory
         self.pcschema = Path(options['directory']) / 'pcschema.xml'
-        # pcid used to create WKB patchs
-        self.pcid = int(options.get('pcid', 0))
-        # next option is used to retrieve pcschema.xml back to postgres
-        self.metadata = options.get('metadata', False)
-        # get time offset if provided
-        self.time_offset = float(options.get('time_offset', 0))
 
-    def read_pcschema(self):
-        """
-        Read pointcloud XML schema and returns its content.
-        The schema document format used by PostgreSQL Pointcloud is the same one
-        used by the PDAL library.
-        """
-        content = ''
-        with self.pcschema.open() as f:
-            content = f.read()
-        return content
-
-    @property
-    def dimensions(self):
-        """
-        List all dimensions from the pcschema xml description
-        """
-        root = etree.fromstring(self.read_pcschema())
-        return [
-            elem.text
-            for elem in root.iter('{http://pointcloud.org/schemas/PC/1.1}name')
-        ]
+        log_to_postgres('{} echo/pulse directories linked'
+                        .format(len(self.source_dirs)))
 
     def execute(self, quals, columns):
         """
@@ -112,7 +90,9 @@ class EchoPulse(ForeignDataWrapper):
 
         source_files_count = set()
         directories = []
-        self.raw_dimensions = [pcschema2raw.get(dim, dim) for dim in self.dimensions]
+        self.raw_dimensions = [
+            pcschema2raw.get(dim.name, dim.name)
+            for dim in self.dimensions]
 
         for sdir in self.source_dirs:
             filelist = [sfi for sfi in sdir.glob('*')]
@@ -180,15 +160,15 @@ class EchoPulse(ForeignDataWrapper):
             if slices[-1].stop != att_size:
                 # append the end of the array
                 slices.append(slice(slices[-1].stop, att_size))
-            # slicing over dimensions
-            for subarray in slices:
+
+            for sli in slices:
                 buff = [
                     pack('<bI', 0, values.nbytes) +  # header for each dimension
                     values.tostring()  # data content
                     for _, att in att_array
-                    for values in [att[subarray]]
+                    for values in [att[sli]]
                 ]
-                header = pack('<b3I', 1, self.pcid, 2, subarray.stop - subarray.start)
+                header = pack('<b3I', 1, self.pcid, 2, sli.stop - sli.start)
                 yield {'points': hexlify(header + b''.join(buff))}
 
     def read_ept(self, frame):
