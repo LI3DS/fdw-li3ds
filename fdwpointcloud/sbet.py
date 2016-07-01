@@ -3,12 +3,10 @@
 import math
 from pathlib import Path
 from glob import glob
-from struct import Struct, pack
+from struct import pack
 from binascii import hexlify
-import xml.etree.ElementTree as etree
 
 import numpy as np
-from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres
 
 from .foreignpc import ForeignPcBase
@@ -26,6 +24,7 @@ class Sbet(ForeignPcBase):
         - sources: file glob pattern for source files (ex: *.sbet)
         - patch_size: how many points sewing in a patch
     """
+
     def __init__(self, options, columns):
         super().__init__(options, columns)
 
@@ -107,7 +106,7 @@ class Sbet(ForeignPcBase):
             subarray = sbet[sli]
             # convert to degrees and apply scale factor
             subarray['x'] = rad2deg_scaled_x * subarray['x']
-            subarray['y'] = rad2deg_scaled_x * subarray['y']
+            subarray['y'] = rad2deg_scaled_y * subarray['y']
             subarray['z'] = subarray['z'] / scale_z
             subarray['m_time'] += self.time_offset
             # cast to pointcloud xml schema types

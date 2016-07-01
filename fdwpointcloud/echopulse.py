@@ -4,12 +4,9 @@ import re
 from pathlib import Path
 from struct import pack
 from collections import defaultdict, namedtuple
-import xml.etree.ElementTree as etree
 from binascii import hexlify
-from itertools import zip_longest
 
 import numpy as np
-from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres
 
 from .foreignpc import ForeignPcBase
@@ -35,6 +32,7 @@ class EchoPulse(ForeignPcBase):
     """
     Foreign class for the Echo/Pulse/Table format
     """
+
     def __init__(self, options, columns):
         """
         Initialize with options passed through the create foreign table
@@ -189,9 +187,9 @@ class EchoPulse(ForeignPcBase):
             pulse_arrays[name] = values
 
         # compute time values and reference it
-        pulsetime = pulse_arrays['time'] = (
-            np.ones(nentries, dtype='float64') * t0
-            + np.arange(nentries, dtype='float64') * delta
+        pulse_arrays['time'] = (
+            np.ones(nentries, dtype='float64') * t0 +
+            np.arange(nentries, dtype='float64') * delta
         )
 
         echo_arrays = {}
