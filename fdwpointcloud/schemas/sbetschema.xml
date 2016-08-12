@@ -33,42 +33,42 @@
     <pc:scale>0.01</pc:scale>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>8</pc:position>
+    <pc:position>5</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_xVelocity</pc:name>
     <pc:description>meters/second</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>9</pc:position>
+    <pc:position>6</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_yVelocity</pc:name>
     <pc:description>meters/second</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>10</pc:position>
+    <pc:position>7</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_zVelocity</pc:name>
     <pc:description>meters/second</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>5</pc:position>
+    <pc:position>8</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_roll</pc:name>
     <pc:description>radians</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>6</pc:position>
+    <pc:position>9</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_pitch</pc:name>
     <pc:description>radians</pc:description>
     <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
-    <pc:position>7</pc:position>
+    <pc:position>10</pc:position>
     <pc:size>8</pc:size>
     <pc:name>m_plateformHeading</pc:name>
     <pc:description>radians</pc:description>
