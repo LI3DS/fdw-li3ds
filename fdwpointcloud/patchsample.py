@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import io
-from os import path
 import math
 import random
 import time
 from binascii import hexlify
-import binascii
-from pathlib import Path, PurePath
 from struct import Struct, pack
 from multicorn import ForeignDataWrapper
-from multicorn.utils import log_to_postgres
 
 
 class PatchSample(ForeignDataWrapper):
@@ -22,6 +17,7 @@ class PatchSample(ForeignDataWrapper):
         - nppp : number of point per patch
         - space : distance between two points in a patch
     """
+
     def __init__(self, options, columns):
         super().__init__(options, columns)
         self.columns = columns
@@ -72,7 +68,7 @@ def gen_patches(npx, npy, nppp, space):
                             random.random()))
             hexa = hexlify(header + b''.join(points))
             yield {
-                    'points': hexa
+                'points': hexa
             }
 
 if __name__ == '__main__':
