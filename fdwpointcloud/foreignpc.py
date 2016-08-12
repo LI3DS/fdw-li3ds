@@ -16,6 +16,7 @@ class ForeignPcBase(ForeignDataWrapper):
     """
     Foreign PointCloud Base class
     """
+
     def __init__(self, options, columns):
         """
         Initialize with options passed through the create foreign table
@@ -55,12 +56,17 @@ class ForeignPcBase(ForeignDataWrapper):
 
         root = etree.fromstring(self.read_pcschema())
         self._dimensions = [
-            dimension(
+            (int(elem.findtext('{}position'.format(PC_NAMESPACE))),
+                dimension(
                 elem.findtext('{}name'.format(PC_NAMESPACE)),
                 elem.findtext('{}size'.format(PC_NAMESPACE)),
                 elem.findtext('{}interpretation'.format(PC_NAMESPACE)),
                 elem.findtext('{}scale'.format(PC_NAMESPACE)) or 1,
-            )
+            ))
             for elem in root.iter('{}dimension'.format(PC_NAMESPACE))
+        ]
+        # reorder and remove position
+        self._dimensions = [
+            dim for _, dim in sorted(self._dimensions, key=lambda dim: dim[0])
         ]
         return self._dimensions

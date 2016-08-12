@@ -60,12 +60,12 @@ def test_dimension_list(schema):
         'y',
         'x',
         'z',
-        'm_xVelocity',
-        'm_yVelocity',
-        'm_zVelocity',
         'm_roll',
         'm_pitch',
         'm_plateformHeading',
+        'm_xVelocity',
+        'm_yVelocity',
+        'm_zVelocity',
         'm_wanderAngle',
         'm_xAcceleration',
         'm_yAcceleration',
@@ -98,7 +98,7 @@ def test_point_count(reader):
     allpatch_size = sum([
         len(unhexlify(patch['points'])) - header_size
         for patch in allpatch
-        ])
+    ])
     point_size = sum(int(dim.size) for dim in reader.dimensions)
     print(allpatch_size / point_size)
     assert allpatch_size / point_size == 50000
