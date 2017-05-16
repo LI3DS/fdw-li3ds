@@ -15,7 +15,7 @@ sudo apt-get install wget ca-certificates
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install python3 python3-dev python3-setuptools postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
+sudo apt-get install python3 python3-dev python3-setuptools python3-pip postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
 ```
 
 Compile and install Multicorn
