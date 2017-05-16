@@ -15,7 +15,7 @@ sudo apt-get install wget ca-certificates
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install python3 python3-dev postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
+sudo apt-get install python3 python3-dev python3-setuptools python3-pip postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
 ```
 
 Compile and install Multicorn
@@ -61,10 +61,10 @@ create foreign table myechopulse_schema (
     schema text
 )
 server echopulse
- options (
-    directory 'data/echopulse'
-    metadata 'true',
-);
+    options (
+        directory 'data/echopulse'
+        , metadata 'true'
+    );
 
 insert into pointcloud_formats(pcid, srid, schema)
 select 1, -1, schema from myechopulse_schema;
@@ -73,10 +73,10 @@ create foreign table myechopulse (
     points pcpatch(1)
 ) server echopulse
     options (
-    directory 'data/echopulse'
-    , patch_size '400'
-    , pcid '1'
-);
+        directory 'data/echopulse'
+        , patch_size '400'
+        , pcid '1'
+    );
 
 select * from myechopulse;
 ```
