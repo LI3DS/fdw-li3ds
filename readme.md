@@ -61,10 +61,10 @@ create foreign table myechopulse_schema (
     schema text
 )
 server echopulse
- options (
-    directory 'data/echopulse'
-    metadata 'true',
-);
+    options (
+        directory 'data/echopulse'
+        , metadata 'true'
+    );
 
 insert into pointcloud_formats(pcid, srid, schema)
 select 1, -1, schema from myechopulse_schema;
@@ -73,10 +73,10 @@ create foreign table myechopulse (
     points pcpatch(1)
 ) server echopulse
     options (
-    directory 'data/echopulse'
-    , patch_size '400'
-    , pcid '1'
-);
+        directory 'data/echopulse'
+        , patch_size '400'
+        , pcid '1'
+    );
 
 select * from myechopulse;
 ```
