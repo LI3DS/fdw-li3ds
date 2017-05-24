@@ -30,7 +30,7 @@ def find_version(*file_paths):
 setup(
     name='fdwli3ds',
     version=find_version('fdwli3ds', '__init__.py'),
-    description="Foreign Data Wrappers for the LI3DS project",
+    description="Foreign Data Wrappers for the LI3DS project",
     url='',
     author='oslandia',
     author_email='contact@oslandia.com',
