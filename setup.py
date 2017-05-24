@@ -26,10 +26,11 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string. "
                        "Should be at the first line of __init__.py.")
 
+
 setup(
-    name='fdwpointcloud',
-    version=find_version('fdwpointcloud', '__init__.py'),
-    description="fdwpointcloud",
+    name='fdwli3ds',
+    version=find_version('fdwli3ds', '__init__.py'),
+    description="Foreign Data Wrappers for the LI3DS project",
     url='',
     author='oslandia',
     author_email='contact@oslandia.com',
@@ -41,5 +42,5 @@ setup(
     extras_require={
         'dev': DEV_REQUIRES,
     },
-    package_data={'fdwpointcloud': ['schemas/*']}
+    package_data={'fdwli3ds': ['schemas/*']}
 )

@@ -6,7 +6,7 @@ from binascii import unhexlify
 import numpy as np
 import pytest
 
-from fdwpointcloud import EchoPulse
+from fdwli3ds import EchoPulse
 
 data_dir = Path(__file__).parent / 'data' / 'echopulse'
 
@@ -97,7 +97,9 @@ def test_time_offset(reader_offset, reader):
     patch_nohead = unhexlify(patch['points'])[18:]
     patch_offset_nohead = unhexlify(patch_offset['points'])[18:]
     # read first dim (should be X -> time, hardcoded here)
-    x_dim = [(dim.size, dim.type) for dim in reader.dimensions if dim.name == 'x'][0]
+    x_dim = [(dim.size, dim.type) for dim in reader.dimensions
+             if dim.name == 'x'][0]
     values = np.fromstring(patch_nohead, dtype=x_dim[1], count=int(x_dim[0]))
-    values_offset = np.fromstring(patch_offset_nohead, dtype=x_dim[1], count=int(x_dim[0]))
+    values_offset = np.fromstring(patch_offset_nohead, dtype=x_dim[1],
+                                  count=int(x_dim[0]))
     assert float(values_offset[0] - values[0]) == 1300000

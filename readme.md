@@ -1,4 +1,8 @@
-# Foreign Data Wrapper for pointcloud data
+# Foreign Data Wrappers for LI³DS
+
+This repo includes [Multicorn](http://multicorn.org/)-based [Foreign Data
+Wrappers](https://www.postgresql.org/docs/current/static/fdwhandler.html)
+for exposing LI³DS data as PostgreSQL tables.
 
 ## Prerequisites
 
@@ -53,7 +57,7 @@ create extension multicorn;
 
 create server echopulse foreign data wrapper multicorn
     options (
-        wrapper 'fdwpointcloud.EchoPulse'
+        wrapper 'fdwli3ds.EchoPulse'
     );
 
 -- create foreign table to retrieve the pointcloud schema dynamically
@@ -86,7 +90,7 @@ select * from myechopulse;
 ```sql
 create server sbetserver foreign data wrapper multicorn
     options (
-        wrapper 'fdwpointcloud.Sbet'
+        wrapper 'fdwli3ds.Sbet'
     );
 
 create foreign table mysbet_schema (

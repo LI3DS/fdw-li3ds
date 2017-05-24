@@ -5,7 +5,7 @@ from binascii import unhexlify
 
 import pytest
 
-from fdwpointcloud import Sbet
+from fdwli3ds import Sbet
 
 sbet_file = str(Path(__file__).parent / 'data' / 'sbet' / 'sbet.bin')
 
