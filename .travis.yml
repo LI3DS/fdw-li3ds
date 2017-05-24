@@ -1,0 +1,16 @@
+dist: trusty
+sudo: required
+python:
+- "2.7"
+
+before_install:
+- sudo apt-get install -q python2.7 python2.7-dev python-setuptools python-pip python-numpy python-pytest postgresql-server-dev-9.6
+- (git clone https://github.com/Kozea/Multicorn && cd Multicorn && make && sudo make install)
+- sudo pip install 'flake8==3.3.0'
+
+install:
+- sudo pip install .
+
+script:
+- flake8 fdwli3ds
+- py.test -v test
