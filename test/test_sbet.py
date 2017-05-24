@@ -40,7 +40,7 @@ def reader_offset(scope='module'):
 def schema(scope='module'):
     ept = Sbet(
         options={
-            'directory': sbet_file,
+            'sources': sbet_file,
             'metadata': 'true',
         },
         columns=None
