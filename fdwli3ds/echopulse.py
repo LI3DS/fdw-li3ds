@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import re
-from pathlib import Path
+import glob
 from struct import pack
 from collections import defaultdict, namedtuple
 from binascii import hexlify
@@ -40,13 +41,16 @@ class EchoPulse(ForeignPcBase):
         """
         super(EchoPulse, self).__init__(options, columns)
         # Resolve data files found in directory
+        directory = options['directory']
+        sources = (source for source in os.listdir(directory)
+                   if subtree_pattern.match(source))
         self.source_dirs = [
-            source.resolve()
-            for source in Path(options['directory']).iterdir()
-            if source.is_dir() and subtree_pattern.match(source.name)
+            os.path.realpath(os.path.join(directory, source))
+            for source in sources
+            if os.path.isdir(os.path.join(directory, source))
         ]
         # pcschema.xml must be present in the directory
-        self.pcschema = Path(options['directory']) / 'pcschema.xml'
+        self.pcschema = os.path.join(options['directory'], 'pcschema.xml')
 
         log_to_postgres('{} echo/pulse directories linked'
                         .format(len(self.source_dirs)))
@@ -93,16 +97,17 @@ class EchoPulse(ForeignPcBase):
             for dim in self.dimensions]
 
         for sdir in self.source_dirs:
-            filelist = [sfi for sfi in sdir.glob('*')]
+            filelist = [sfi for sfi in glob.glob(os.path.join(sdir, '*'))]
             # ordered by name (which is in fact time)
             filelist.sort()
             source_files_count.add(len(filelist))
             # extracting informations on data types and signal types
-            signal, datatype, name = subtree_pattern.match(sdir.name).groups()
+            basename = os.path.basename(sdir)
+            signal, datatype, name = subtree_pattern.match(basename).groups()
 
             # contruct a tuple to store all informations needed to read
             # the data
-            directories.append((sdir.name, signal, datatype, name, filelist))
+            directories.append((basename, signal, datatype, name, filelist))
 
         # sort on signal and datatype
         directories.sort(
@@ -176,7 +181,7 @@ class EchoPulse(ForeignPcBase):
         # read first linear time and pop it
         pulses = frame['pulse']
         timefile = pulses.pop(('linear', 'time'))
-        with timefile.open('r') as tfile:
+        with open(timefile, 'r') as tfile:
             nentries, _, t0, _, delta, _ = tfile.readline().split()
             nentries = int(nentries)
             t0 = float(t0) + self.time_offset
