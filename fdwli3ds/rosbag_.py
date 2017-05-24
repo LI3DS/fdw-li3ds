@@ -72,9 +72,9 @@ def import_bag(options):
     return Bag
 
 
-class RosbagFdw(ForeignDataWrapper):
+class Rosbag(ForeignDataWrapper):
     def __init__(self, options, columns=None):
-        super(RosbagFdw, self).__init__(options, columns)
+        super(Rosbag, self).__init__(options, columns)
         Bag = import_bag(options)
         self.filename = options.pop('rosbag_path', "") + options.pop('rosbag')
         self.topic = options.pop('topic', None)
@@ -103,7 +103,7 @@ class RosbagFdw(ForeignDataWrapper):
                 options.keys()), WARNING)
 
     @classmethod
-    def import_schema(self, schema, srv_options, options,
+    def import_schema(cls, schema, srv_options, options,
                       restriction_type, restricts):
         Bag = import_bag(srv_options)
         pcid = int(srv_options.pop('pcid', 1))
@@ -118,7 +118,7 @@ class RosbagFdw(ForeignDataWrapper):
 
         res = []
         for topic, infos in topics.items():
-            columns = RosbagFdw.get_columns(bag, topic, infos, pcid)
+            columns = cls.get_columns(bag, topic, infos, pcid)
             tablecols = [sql_fmt(*col) for col in columns]
             tableopts = {'topic': topic, 'rosbag': schema}
             res.append(TableDefinition(topic, columns=tablecols,
@@ -142,12 +142,12 @@ class RosbagFdw(ForeignDataWrapper):
             for row in self.get_rows(topic, msg, t, columns):
                 yield row
 
-    @staticmethod
-    def get_columns(bag, topic, infos, pcid):
+    @classmethod
+    def get_columns(cls, bag, topic, infos, pcid):
         # read the first message to introspect its type
         # internal connection api could have been used instead
         _, msg, _ = next(bag.read_messages(topics=topic))
-        res = RosbagFdw.get_columns_from_message(msg)
+        res = cls.get_columns_from_message(msg)
         res.append(("topic", "string", "", 0))
         res.append(("time", "uint64", "", 0))
         if infos.msg_type == 'sensor_msgs/PointCloud2':
@@ -156,8 +156,8 @@ class RosbagFdw(ForeignDataWrapper):
             res.append(("patch", "pcpatch", "", pcid))
         return res
 
-    @staticmethod
-    def get_columns_from_message(msg, cols=[], typ_suffix=""):
+    @classmethod
+    def get_columns_from_message(cls, msg, cols=[], typ_suffix=""):
         res = []
         for col, typ in zip(msg.__slots__, msg._slot_types):
             pos_array = typ.find('[')
@@ -171,7 +171,7 @@ class RosbagFdw(ForeignDataWrapper):
             if isinstance(attr, list):
                 attr = attr[0]
             if hasattr(attr, '__slots__'):
-                columns = RosbagFdw.get_columns_from_message(
+                columns = cls.get_columns_from_message(
                     attr, subcols, subtyp_suffix)
                 res.extend(columns)
             else:
@@ -208,7 +208,8 @@ class RosbagFdw(ForeignDataWrapper):
                  'comment topic {}\ncomment seq {}\n'.format(
                     endianness, self.filename, self.topic, msg.header.seq)
         header += 'comment offset {}\ncomment vertex0 {}\nelement vertex {}\n'
-        for datatype, name, _ in RosbagFdw.get_fields_with_extra_bytes(msg):
+        for datatype, name, _ in \
+                self.__class___.get_fields_with_extra_bytes(msg):
             header += 'property {} {}\n'.format(interp[datatype], name)
         header += 'end_header\n'
         for offset, count, data in get_split(msg.data, msg.row_step,
@@ -224,8 +225,8 @@ class RosbagFdw(ForeignDataWrapper):
             header = pack(fmt, endianness, self.pcid, 0, count)
             yield hexlify(header + data)
 
-    @staticmethod
-    def get_schema(msg):
+    @classmethod
+    def get_schema(cls, msg):
         interp = [
             'int8_t', 'uint8_t', 'int16_t', 'uint16_t',
             'int32_t', 'uint32_t', 'float32_t', 'float64_t'
@@ -235,7 +236,7 @@ class RosbagFdw(ForeignDataWrapper):
             ' xmlns:pc="http://pointcloud.org/schemas/PC/1.1"\n   ' \
             ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'
         for i, (datatype, name, size) in enumerate(
-                RosbagFdw.get_fields_with_extra_bytes(msg)):
+                cls.get_fields_with_extra_bytes(msg)):
             schema += \
                 '  <pc:dimension>\n' \
                 '    <pc:position>{}</pc:position>\n' \
