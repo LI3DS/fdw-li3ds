@@ -6,40 +6,40 @@ for exposing LI³DS data as PostgreSQL tables.
 
 ## Prerequisites
 
-- python >= 3.4
+- python == 2.7
 - numpy
 - multicorn
 
 ### Install under Ubuntu
 
-Install PostgreSQL 9.5 from PGDG repositories and Python 3
+Install PostgreSQL 9.5 from PGDG repositories and Python
+
 ```sh
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 sudo apt-get install wget ca-certificates
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install python3 python3-dev python3-setuptools python3-pip postgresql-9.5 postgresql-server-dev-9.5 python3-numpy
+sudo apt-get install python2.7 python2.7-dev python-setuptools python-pip python-numpy postgresql-9.5 postgresql-server-dev-9.5
 ```
 
 Compile and install Multicorn
 ```sh
 git clone git@github.com:Kozea/Multicorn.git
 cd Multicorn
-export PYTHON_OVERRIDE=python3
 make
-sudo PYTHON_OVERRIDE=python3 make install
+sudo make install
 ```
 
 ## Installation
 
 Clone repository and install with:
 
-	sudo pip3 install .
+	sudo pip install .
 
 or install in editable mode (for development):
 
-	sudo pip3 install -e .
+	sudo pip install -e .
 
 ## Testing
 
@@ -123,6 +123,12 @@ select * from mysbet;
 
 Pytest is required to launch unit tests.
 
+```
+sudo apt-get install python-pytest
+```
+
+Or
+
 ```bash
 pip install -e .[dev]
 ```
@@ -132,4 +138,3 @@ Launch tests:
 ```bash
 py.test
 ```
-
