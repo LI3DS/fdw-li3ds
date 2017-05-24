@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import math
-from pathlib import Path
 from glob import glob
 from struct import pack
 from binascii import hexlify
@@ -30,14 +30,14 @@ class Sbet(ForeignPcBase):
 
         if 'sources' in options:
             self.sources = [
-                Path(source).resolve()
-                for source in glob(options['sources'])
+                os.path.realpath(source) for source in glob(options['sources'])
             ]
             log_to_postgres('{} sbet file(s) linked'.format(len(self.sources)))
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 100))
         # sbet schema is provided
-        self.pcschema = Path(__file__).parent / 'schemas' / 'sbetschema.xml'
+        self.pcschema = os.path.join(os.path.dirname(__file__),
+                                     'schemas', 'sbetschema.xml')
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table
