@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pathlib import Path
+import os
 from binascii import unhexlify
 
 import numpy as np
@@ -8,7 +8,8 @@ import pytest
 
 from fdwli3ds import EchoPulse
 
-data_dir = Path(__file__).parent / 'data' / 'echopulse'
+data_dir = os.path.join(
+    os.path.dirname(__file__), 'data', 'echopulse')
 
 
 @pytest.fixture
