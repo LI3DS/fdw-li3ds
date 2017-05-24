@@ -71,6 +71,7 @@ def gen_patches(npx, npy, nppp, space):
                 'points': hexa
             }
 
+
 if __name__ == '__main__':
     # Test py calling the script from interpreter
     p = PatchSample({'npx': 10, 'npy': 10, 'nppp': 100, 'space': 1}, {})

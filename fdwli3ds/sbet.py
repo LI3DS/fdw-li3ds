@@ -23,7 +23,7 @@ class Sbet(ForeignPcBase):
 
         - sources: file glob pattern for source files (ex: *.sbet)
         - patch_size: how many points sewing in a patch
-    """
+    """  # NOQA
 
     def __init__(self, options, columns):
         super(Sbet, self).__init__(options, columns)
@@ -86,8 +86,8 @@ class Sbet(ForeignPcBase):
         sbet_patch_type = [(dim.name, dim.type) for dim in self.dimensions]
 
         # open file as a memory map in Copy-on-write mode
-        # (assignments affect data in memory, but changes are not saved to disk.
-        # The file on disk is read-only)
+        # (assignments affect data in memory, but changes are not saved to
+        # disk. The file on disk is read-only)
         sbet = np.memmap(str(sbetfile), dtype=sbet_source_type, mode='c')
         sbet_size = len(sbet)
         # constructs slices according to patch_size

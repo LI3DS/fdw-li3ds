@@ -38,8 +38,8 @@ class ForeignPcBase(ForeignDataWrapper):
     def read_pcschema(self):
         """
         Read pointcloud XML schema and returns its content.
-        The schema document format used by PostgreSQL Pointcloud is the same one
-        used by the PDAL library.
+        The schema document format used by PostgreSQL Pointcloud is the same
+        one used by the PDAL library.
         """
         content = ''
         with self.pcschema.open() as f:

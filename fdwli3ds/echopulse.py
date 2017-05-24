@@ -75,7 +75,7 @@ class EchoPulse(ForeignPcBase):
                     {('float32', 'amplitude'): '2.txt', ('float32', 'range'): '2.bin', },
             },
         ]
-        """
+        """  # NOQA
         if self.metadata:
             yield {'schema': self.read_pcschema()}
             return
@@ -100,7 +100,8 @@ class EchoPulse(ForeignPcBase):
             # extracting informations on data types and signal types
             signal, datatype, name = subtree_pattern.match(sdir.name).groups()
 
-            # contruct a tuple to store all informations needed to read the data
+            # contruct a tuple to store all informations needed to read
+            # the data
             directories.append((sdir.name, signal, datatype, name, filelist))
 
         # sort on signal and datatype
@@ -111,7 +112,8 @@ class EchoPulse(ForeignPcBase):
 
         # check consistency, sub directories must have the same number of files
         if len(source_files_count) != 1:
-            raise Exception('Consistency failed, bad number of files in source directories')
+            raise Exception('Consistency failed, bad number of files in '
+                            'source directories')
 
         framelist = []
 
@@ -138,7 +140,7 @@ class EchoPulse(ForeignPcBase):
         # uint32:         size of the compressed dimension in bytes
         # data[]:         the compressed dimensional values
 
-        """
+        """  # NOQA
         for idx, frame in enumerate(framelist):
             # read frame
             att_array = self.read_ept(frame)
@@ -161,7 +163,7 @@ class EchoPulse(ForeignPcBase):
 
             for sli in slices:
                 buff = [
-                    pack('<bI', 0, values.nbytes) +  # header for each dimension
+                    pack('<bI', 0, values.nbytes) +  # header for each dim
                     values.tostring()  # data content
                     for _, att in att_array
                     for values in [att[sli]]
@@ -217,11 +219,12 @@ class EchoPulse(ForeignPcBase):
             echo_arrays['echo'], zero_indices, 0).astype('uint8')
 
         # Duplicate all items in pulse arrays according to num_echoes number
-        # We must create a copy of num_echoes array with zero values replaced by 1
-        # in order to repeat correctly items without deleting zero items
+        # We must create a copy of num_echoes array with zero values replaced
+        # by 1 in order to repeat correctly items without deleting zero items
         num_echoes_copy = pulse_arrays['num_echoes'].copy()
 
-        # remove zero value in order to use the repeat function without deleting rows
+        # remove zero value in order to use the repeat function without
+        # deleting rows
         num_echoes_copy[num_echoes_copy == 0] = 1
 
         # duplicate rows having more than 1 echoe
