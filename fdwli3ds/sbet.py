@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import math
-from pathlib import Path
 from glob import glob
 from struct import pack
 from binascii import hexlify
@@ -23,21 +23,21 @@ class Sbet(ForeignPcBase):
 
         - sources: file glob pattern for source files (ex: *.sbet)
         - patch_size: how many points sewing in a patch
-    """
+    """  # NOQA
 
     def __init__(self, options, columns):
-        super().__init__(options, columns)
+        super(Sbet, self).__init__(options, columns)
 
         if 'sources' in options:
             self.sources = [
-                Path(source).resolve()
-                for source in glob(options['sources'])
+                os.path.realpath(source) for source in glob(options['sources'])
             ]
             log_to_postgres('{} sbet file(s) linked'.format(len(self.sources)))
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 100))
         # sbet schema is provided
-        self.pcschema = Path(__file__).parent / 'schemas' / 'sbetschema.xml'
+        self.pcschema = os.path.join(os.path.dirname(__file__),
+                                     'schemas', 'sbetschema.xml')
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table
@@ -49,7 +49,8 @@ class Sbet(ForeignPcBase):
             return
 
         for source in self.sources:
-            yield from self.read_sbet(source)
+            for patch in self.read_sbet(source):
+                yield patch
 
     def read_sbet(self, sbetfile):
         """
@@ -86,8 +87,8 @@ class Sbet(ForeignPcBase):
         sbet_patch_type = [(dim.name, dim.type) for dim in self.dimensions]
 
         # open file as a memory map in Copy-on-write mode
-        # (assignments affect data in memory, but changes are not saved to disk.
-        # The file on disk is read-only)
+        # (assignments affect data in memory, but changes are not saved to
+        # disk. The file on disk is read-only)
         sbet = np.memmap(str(sbetfile), dtype=sbet_source_type, mode='c')
         sbet_size = len(sbet)
         # constructs slices according to patch_size

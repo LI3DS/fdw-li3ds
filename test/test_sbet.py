@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pathlib import Path
+import os
 from binascii import unhexlify
 
 import pytest
 
-from fdwpointcloud import Sbet
+from fdwli3ds import Sbet
 
-sbet_file = str(Path(__file__).parent / 'data' / 'sbet' / 'sbet.bin')
+sbet_file = os.path.join(
+    os.path.dirname(__file__), 'data', 'sbet', 'sbet.bin')
 
 
 @pytest.fixture
@@ -55,24 +56,24 @@ def test_read_schema(schema):
 
 
 def test_dimension_list(schema):
-    assert [dim.name for dim in schema.dimensions] == [
-        'm_time',
-        'y',
-        'x',
-        'z',
-        'm_roll',
+    assert sorted([dim.name for dim in schema.dimensions]) == [
         'm_pitch',
         'm_plateformHeading',
-        'm_xVelocity',
-        'm_yVelocity',
-        'm_zVelocity',
+        'm_roll',
+        'm_time',
         'm_wanderAngle',
         'm_xAcceleration',
-        'm_yAcceleration',
-        'm_zAcceleration',
         'm_xBodyAngularRate',
+        'm_xVelocity',
+        'm_yAcceleration',
         'm_yBodyAngularRate',
-        'm_zBodyAngularRate'
+        'm_yVelocity',
+        'm_zAcceleration',
+        'm_zBodyAngularRate',
+        'm_zVelocity',
+        'x',
+        'y',
+        'z'
     ]
 
 

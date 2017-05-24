@@ -8,7 +8,7 @@ create extension if not exists multicorn;
 drop server if exists sbetserver cascade;
 create server sbetserver foreign data wrapper multicorn
 options (
-    wrapper 'fdwpointcloud.Sbet'
+    wrapper 'fdwli3ds.Sbet'
 );
 
 -- Get the metadata for Sbet

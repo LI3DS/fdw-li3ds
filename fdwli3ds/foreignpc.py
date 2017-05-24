@@ -22,7 +22,7 @@ class ForeignPcBase(ForeignDataWrapper):
         Initialize with options passed through the create foreign table
         statement
         """
-        super().__init__(options, columns)
+        super(ForeignPcBase, self).__init__(options, columns)
         self.columns = columns
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 400))
@@ -38,11 +38,11 @@ class ForeignPcBase(ForeignDataWrapper):
     def read_pcschema(self):
         """
         Read pointcloud XML schema and returns its content.
-        The schema document format used by PostgreSQL Pointcloud is the same one
-        used by the PDAL library.
+        The schema document format used by PostgreSQL Pointcloud is the same
+        one used by the PDAL library.
         """
         content = ''
-        with self.pcschema.open() as f:
+        with open(self.pcschema) as f:
             content = f.read()
         return content
 

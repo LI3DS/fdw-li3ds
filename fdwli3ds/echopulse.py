@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import re
-from pathlib import Path
+import glob
 from struct import pack
 from collections import defaultdict, namedtuple
 from binascii import hexlify
@@ -38,15 +39,18 @@ class EchoPulse(ForeignPcBase):
         Initialize with options passed through the create foreign table
         statement
         """
-        super().__init__(options, columns)
+        super(EchoPulse, self).__init__(options, columns)
         # Resolve data files found in directory
+        directory = options['directory']
+        sources = (source for source in os.listdir(directory)
+                   if subtree_pattern.match(source))
         self.source_dirs = [
-            source.resolve()
-            for source in Path(options['directory']).iterdir()
-            if source.is_dir() and subtree_pattern.match(source.name)
+            os.path.realpath(os.path.join(directory, source))
+            for source in sources
+            if os.path.isdir(os.path.join(directory, source))
         ]
         # pcschema.xml must be present in the directory
-        self.pcschema = Path(options['directory']) / 'pcschema.xml'
+        self.pcschema = os.path.join(options['directory'], 'pcschema.xml')
 
         log_to_postgres('{} echo/pulse directories linked'
                         .format(len(self.source_dirs)))
@@ -75,7 +79,7 @@ class EchoPulse(ForeignPcBase):
                     {('float32', 'amplitude'): '2.txt', ('float32', 'range'): '2.bin', },
             },
         ]
-        """
+        """  # NOQA
         if self.metadata:
             yield {'schema': self.read_pcschema()}
             return
@@ -93,15 +97,17 @@ class EchoPulse(ForeignPcBase):
             for dim in self.dimensions]
 
         for sdir in self.source_dirs:
-            filelist = [sfi for sfi in sdir.glob('*')]
+            filelist = [sfi for sfi in glob.glob(os.path.join(sdir, '*'))]
             # ordered by name (which is in fact time)
             filelist.sort()
             source_files_count.add(len(filelist))
             # extracting informations on data types and signal types
-            signal, datatype, name = subtree_pattern.match(sdir.name).groups()
+            basename = os.path.basename(sdir)
+            signal, datatype, name = subtree_pattern.match(basename).groups()
 
-            # contruct a tuple to store all informations needed to read the data
-            directories.append((sdir.name, signal, datatype, name, filelist))
+            # contruct a tuple to store all informations needed to read
+            # the data
+            directories.append((basename, signal, datatype, name, filelist))
 
         # sort on signal and datatype
         directories.sort(
@@ -111,7 +117,8 @@ class EchoPulse(ForeignPcBase):
 
         # check consistency, sub directories must have the same number of files
         if len(source_files_count) != 1:
-            raise Exception('Consistency failed, bad number of files in source directories')
+            raise Exception('Consistency failed, bad number of files in '
+                            'source directories')
 
         framelist = []
 
@@ -121,7 +128,8 @@ class EchoPulse(ForeignPcBase):
                 framelist[-1][signal][(datatype, name)] = filelist[idx]
 
         # start reading and creating patches
-        yield from self.generate_patch(framelist)
+        for patch in self.generate_patch(framelist):
+            yield patch
 
     def generate_patch(self, framelist):
         """
@@ -138,7 +146,7 @@ class EchoPulse(ForeignPcBase):
         # uint32:         size of the compressed dimension in bytes
         # data[]:         the compressed dimensional values
 
-        """
+        """  # NOQA
         for idx, frame in enumerate(framelist):
             # read frame
             att_array = self.read_ept(frame)
@@ -161,7 +169,7 @@ class EchoPulse(ForeignPcBase):
 
             for sli in slices:
                 buff = [
-                    pack('<bI', 0, values.nbytes) +  # header for each dimension
+                    pack('<bI', 0, values.nbytes) +  # header for each dim
                     values.tostring()  # data content
                     for _, att in att_array
                     for values in [att[sli]]
@@ -173,7 +181,7 @@ class EchoPulse(ForeignPcBase):
         # read first linear time and pop it
         pulses = frame['pulse']
         timefile = pulses.pop(('linear', 'time'))
-        with timefile.open('r') as tfile:
+        with open(timefile, 'r') as tfile:
             nentries, _, t0, _, delta, _ = tfile.readline().split()
             nentries = int(nentries)
             t0 = float(t0) + self.time_offset
@@ -217,11 +225,12 @@ class EchoPulse(ForeignPcBase):
             echo_arrays['echo'], zero_indices, 0).astype('uint8')
 
         # Duplicate all items in pulse arrays according to num_echoes number
-        # We must create a copy of num_echoes array with zero values replaced by 1
-        # in order to repeat correctly items without deleting zero items
+        # We must create a copy of num_echoes array with zero values replaced
+        # by 1 in order to repeat correctly items without deleting zero items
         num_echoes_copy = pulse_arrays['num_echoes'].copy()
 
-        # remove zero value in order to use the repeat function without deleting rows
+        # remove zero value in order to use the repeat function without
+        # deleting rows
         num_echoes_copy[num_echoes_copy == 0] = 1
 
         # duplicate rows having more than 1 echoe

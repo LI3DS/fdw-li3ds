@@ -19,7 +19,7 @@ class PatchSample(ForeignDataWrapper):
     """
 
     def __init__(self, options, columns):
-        super().__init__(options, columns)
+        super(PatchSample, self).__init__(options, columns)
         self.columns = columns
         self.npx = int(options['npx'])
         self.npy = int(options['npy'])
@@ -27,7 +27,8 @@ class PatchSample(ForeignDataWrapper):
         self.space = float(options['space'])
 
     def execute(self, quals, columns):
-        yield from gen_patches(self.npx, self.npy, self.nppp, self.space)
+        for patch in gen_patches(self.npx, self.npy, self.nppp, self.space):
+            yield patch
 
 
 def gen_patches(npx, npy, nppp, space):
@@ -70,6 +71,7 @@ def gen_patches(npx, npy, nppp, space):
             yield {
                 'points': hexa
             }
+
 
 if __name__ == '__main__':
     # Test py calling the script from interpreter
