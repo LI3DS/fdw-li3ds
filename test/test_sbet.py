@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pathlib import Path
+import os
 from binascii import unhexlify
 
 import pytest
 
 from fdwli3ds import Sbet
 
-sbet_file = str(Path(__file__).parent / 'data' / 'sbet' / 'sbet.bin')
+sbet_file = os.path.join(
+    os.path.dirname(__file__), 'data', 'sbet', 'sbet.bin')
 
 
 @pytest.fixture
