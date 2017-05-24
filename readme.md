@@ -96,7 +96,7 @@ create server sbetserver foreign data wrapper multicorn
 create foreign table mysbet_schema (
     schema text
 )
-server route_server
+server sbeserver
  options (
     metadata 'true'
 );
@@ -108,7 +108,7 @@ create foreign table mysbet (
     points pcpatch(2)
 ) server sbetserver
     options (
-        sources 'data/sbet.bin'
+        sources 'data/sbet/sbet.bin'
         , patch_size '100'
         , pcid '2'
 );
