@@ -118,6 +118,66 @@ select * from mysbet;
 
 ```
 
+### ROS bag files
+
+Create server:
+
+```sql
+create server rosbagserver foreign data wrapper multicorn
+    options (
+        wrapper 'fdwli3ds.Rosbag'
+        , rosbag 'data/rosbag/session8_section0_1492648601948956966_0.bag'
+    );
+```
+
+Create foreign table for the `/INS/SbgLogImuData` topic:
+
+```sql
+create foreign table rosbag_imu (
+    "status" smallint
+    , "temperature" float
+    , "timeStamp" integer
+    , "accelerometers" float[3]
+    , "topic" text
+    , "deltaAngle" float[3]
+    , "time" bigint
+    , "deltaVelocity" float[3]
+    , "gyroscopes" float[3]
+) server rosbagserver
+    options (
+        topic '/INS/SbgLogImuData'
+);
+
+select * from rosbag_imu limit 20;
+```
+
+Create foreign table for the `/Laser/velodyne_points` topic:
+
+```sql
+create foreign table rosbag_pointcloud2 (
+    schema character varying
+    , patch pcpatch(3)
+    , ply bytea
+    , width int
+    , height int
+) server rosbagserver
+    options (
+        topic '/Laser/velodyne_points'
+        , pcid '3'
+        , max_count '10000'
+);
+
+-- register the pointcloud schema (only once!)
+insert into pointcloud_formats
+select 3 as pcid, 4326 as srid, schema
+from rosbag_pointcloud2
+limit 1;
+
+select sum(width*height) from rosbag_pointcloud2;
+select sum(pc_numpoints(patch)) from rosbag_pointcloud2;
+select pc_get(pc_patchmin(patch)), pc_get(pc_patchmax(patch)) from rosbag_pointcloud2 limit 20;
+select encode(ply::varchar(700)::bytea, 'escape') from rosbag_pointcloud2 limit 1;
+```
 
 ## Unit tests
 
@@ -137,4 +197,45 @@ Launch tests:
 
 ```bash
 py.test
+```
+
+## Known Issues
+
+SIGSEGV crashes with PostgreSQL 9.6
+
+If the `postgresql` process crashes with a SIGSEGV error it means that you are hitting the xxHash symbols conflict issue reported in https://github.com/ros/ros_comm/pull/1065. To fix the issue the `roslz4` Python package should be built and installed from source.
+
+```
+git clone https://github.com/ros/ros_comm
+git fetch https://github.com/elemoine/ros_comm xxh-namespace
+git checkout FETCH_HEAD
+cd utilities/roslz4
+mkdir build
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+sudo make install
+```
+
+## Experimental
+
+Create tables automatically for all topics of a rosbag file, using `IMPORT
+SCHEMA`.
+
+```sql
+create server rosbagserver
+foreign data wrapper multicorn
+    options (
+      wrapper 'fdwli3ds.Rosbag'
+      , rosbag_path 'data/rosbag/'
+);
+
+create schema rosbag;
+
+import foreign schema "session8_section0_1492648601948956966_0.bag"
+from server rosbagserver into rosbag;
+
+insert into pointcloud_formats
+select 4 as pcid, 4326 as srid, schema
+from rosbag."/Laser/velodyne_points"
+limit 1;
 ```
