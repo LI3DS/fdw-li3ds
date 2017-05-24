@@ -38,7 +38,7 @@ class EchoPulse(ForeignPcBase):
         Initialize with options passed through the create foreign table
         statement
         """
-        super().__init__(options, columns)
+        super(EchoPulse, self).__init__(options, columns)
         # Resolve data files found in directory
         self.source_dirs = [
             source.resolve()

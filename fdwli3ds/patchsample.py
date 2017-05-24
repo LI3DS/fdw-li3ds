@@ -19,7 +19,7 @@ class PatchSample(ForeignDataWrapper):
     """
 
     def __init__(self, options, columns):
-        super().__init__(options, columns)
+        super(PatchSample, self).__init__(options, columns)
         self.columns = columns
         self.npx = int(options['npx'])
         self.npy = int(options['npy'])

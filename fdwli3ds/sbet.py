@@ -26,7 +26,7 @@ class Sbet(ForeignPcBase):
     """
 
     def __init__(self, options, columns):
-        super().__init__(options, columns)
+        super(Sbet, self).__init__(options, columns)
 
         if 'sources' in options:
             self.sources = [

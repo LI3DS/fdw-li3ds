@@ -22,7 +22,7 @@ class ForeignPcBase(ForeignDataWrapper):
         Initialize with options passed through the create foreign table
         statement
         """
-        super().__init__(options, columns)
+        super(ForeignPcBase, self).__init__(options, columns)
         self.columns = columns
         # set default patch size to 100 points if not given
         self.patch_size = int(options.get('patch_size', 400))
