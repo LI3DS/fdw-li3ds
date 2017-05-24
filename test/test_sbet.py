@@ -56,24 +56,24 @@ def test_read_schema(schema):
 
 
 def test_dimension_list(schema):
-    assert sorted([dim.name for dim in schema.dimensions]) == [
+    assert [dim.name for dim in schema.dimensions] == [
+        'm_time',
+        'y',
+        'x',
+        'z',
+        'm_xVelocity',
+        'm_yVelocity',
+        'm_zVelocity',
+        'm_roll',
         'm_pitch',
         'm_plateformHeading',
-        'm_roll',
-        'm_time',
         'm_wanderAngle',
         'm_xAcceleration',
-        'm_xBodyAngularRate',
-        'm_xVelocity',
         'm_yAcceleration',
-        'm_yBodyAngularRate',
-        'm_yVelocity',
         'm_zAcceleration',
-        'm_zBodyAngularRate',
-        'm_zVelocity',
-        'x',
-        'y',
-        'z'
+        'm_xBodyAngularRate',
+        'm_yBodyAngularRate',
+        'm_zBodyAngularRate'
     ]
 
 
