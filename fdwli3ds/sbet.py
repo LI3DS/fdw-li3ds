@@ -49,7 +49,8 @@ class Sbet(ForeignPcBase):
             return
 
         for source in self.sources:
-            yield from self.read_sbet(source)
+            for patch in self.read_sbet(source):
+                yield patch
 
     def read_sbet(self, sbetfile):
         """

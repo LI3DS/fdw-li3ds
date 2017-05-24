@@ -123,7 +123,8 @@ class EchoPulse(ForeignPcBase):
                 framelist[-1][signal][(datatype, name)] = filelist[idx]
 
         # start reading and creating patches
-        yield from self.generate_patch(framelist)
+        for patch in self.generate_patch(framelist):
+            yield patch
 
     def generate_patch(self, framelist):
         """

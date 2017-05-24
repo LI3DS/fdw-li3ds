@@ -27,7 +27,8 @@ class PatchSample(ForeignDataWrapper):
         self.space = float(options['space'])
 
     def execute(self, quals, columns):
-        yield from gen_patches(self.npx, self.npy, self.nppp, self.space)
+        for patch in gen_patches(self.npx, self.npy, self.nppp, self.space):
+            yield patch
 
 
 def gen_patches(npx, npy, nppp, space):
