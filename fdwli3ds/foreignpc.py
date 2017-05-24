@@ -42,7 +42,7 @@ class ForeignPcBase(ForeignDataWrapper):
         one used by the PDAL library.
         """
         content = ''
-        with self.pcschema.open() as f:
+        with open(self.pcschema) as f:
             content = f.read()
         return content
 
