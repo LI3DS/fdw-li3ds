@@ -58,6 +58,7 @@ create extension multicorn;
 create server echopulse foreign data wrapper multicorn
     options (
         wrapper 'fdwli3ds.EchoPulse'
+        , directory 'data/echopulse'
     );
 
 -- create foreign table to retrieve the pointcloud schema dynamically
@@ -66,8 +67,7 @@ create foreign table myechopulse_schema (
 )
 server echopulse
     options (
-        directory 'data/echopulse'
-        , metadata 'true'
+        metadata 'true'
     );
 
 insert into pointcloud_formats(pcid, srid, schema)
@@ -77,8 +77,7 @@ create foreign table myechopulse (
     points pcpatch(1)
 ) server echopulse
     options (
-        directory 'data/echopulse'
-        , patch_size '400'
+        patch_size '400'
         , pcid '1'
     );
 
