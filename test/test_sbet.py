@@ -101,5 +101,4 @@ def test_point_count(reader):
         for patch in allpatch
     ])
     point_size = sum(int(dim.size) for dim in reader.dimensions)
-    print(allpatch_size / point_size)
     assert allpatch_size / point_size == 50000
