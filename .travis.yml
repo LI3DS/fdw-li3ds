@@ -4,7 +4,10 @@ python:
 - "2.7"
 
 before_install:
-- sudo apt-get install -q python2.7 python2.7-dev python-setuptools python-pip python-numpy python-pytest postgresql-server-dev-9.6
+- sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+- sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+- sudo apt-get update
+- sudo apt-get install -q python2.7 python2.7-dev python-setuptools python-pip python-numpy python-pytest ros-indigo-rosbag ros-indigo-roslz4 postgresql-server-dev-9.6
 - (git clone https://github.com/Kozea/Multicorn && cd Multicorn && make && sudo make install)
 - sudo pip install 'flake8==3.3.0'
 
@@ -13,4 +16,4 @@ install:
 
 script:
 - flake8 fdwli3ds
-- py.test -v test
+- source /opt/ros/indigo/setup.bash && py.test -v test
