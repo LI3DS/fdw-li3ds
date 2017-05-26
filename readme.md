@@ -96,7 +96,7 @@ create server sbetserver foreign data wrapper multicorn
 create foreign table mysbet_schema (
     schema text
 )
-server sbeserver
+server sbetserver
  options (
     metadata 'true'
 );
