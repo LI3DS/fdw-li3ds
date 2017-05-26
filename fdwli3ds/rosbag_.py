@@ -167,7 +167,7 @@ class Rosbag(ForeignDataWrapper):
             if pos_array > 0:
                 subtyp_suffix += typ[pos_array:]
                 typ = typ[:pos_array]
-            attr = object.__getattribute__(msg, col)
+            attr = getattr(msg, col)
             if isinstance(attr, list):
                 attr = attr[0]
             if hasattr(attr, '__slots__'):
@@ -268,9 +268,9 @@ class Rosbag(ForeignDataWrapper):
             attr = msg
             for col in column.split('.'):
                 if isinstance(attr, list):
-                    attr = tuple(object.__getattribute__(a, col) for a in attr)
+                    attr = tuple(getattr(a, col) for a in attr)
                 else:
-                    attr = object.__getattribute__(attr, col)
+                    attr = getattr(attr, col)
             if isinstance(attr, str):
                 fmt = self.unpack_fmt[column]
                 if fmt:
