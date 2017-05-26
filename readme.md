@@ -205,10 +205,8 @@ SIGSEGV crashes with PostgreSQL 9.6
 
 If the `postgresql` process crashes with a SIGSEGV error it means that you are hitting the xxHash symbols conflict issue reported in https://github.com/ros/ros_comm/pull/1065. To fix the issue the `roslz4` Python package should be built and installed from source.
 
-```
+```bash
 git clone https://github.com/ros/ros_comm
-git fetch https://github.com/elemoine/ros_comm xxh-namespace
-git checkout FETCH_HEAD
 cd utilities/roslz4
 mkdir build
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
