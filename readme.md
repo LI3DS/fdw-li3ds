@@ -55,7 +55,7 @@ create extension if not exists pointcloud;
 drop extension multicorn cascade;
 create extension multicorn;
 
-create server echopulse foreign data wrapper multicorn
+create server echopulseserver foreign data wrapper multicorn
     options (
         wrapper 'fdwli3ds.EchoPulse'
         , directory 'data/echopulse'
@@ -65,7 +65,7 @@ create server echopulse foreign data wrapper multicorn
 create foreign table myechopulse_schema (
     schema text
 )
-server echopulse
+server echopulseserver
     options (
         metadata 'true'
     );
@@ -75,7 +75,7 @@ select 1, -1, schema from myechopulse_schema;
 
 create foreign table myechopulse (
     points pcpatch(1)
-) server echopulse
+) server echopulseserver
     options (
         patch_size '400'
         , pcid '1'
