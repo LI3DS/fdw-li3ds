@@ -233,7 +233,7 @@ class Rosbag(ForeignDataWrapper):
                     endianness, self.filename, self.topic, msg.header.seq)
         header += 'comment offset {}\ncomment vertex0 {}\nelement vertex {}\n'
         for datatype, name, _ in \
-                self.__class___.get_fields_with_extra_bytes(msg):
+                self.__class__.get_fields_with_extra_bytes(msg):
             header += 'property {} {}\n'.format(interp[datatype], name)
         header += 'end_header\n'
         for offset, count, data in get_split(msg.data, msg.row_step,
