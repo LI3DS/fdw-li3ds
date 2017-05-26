@@ -1,9 +1,10 @@
 from multicorn import ForeignDataWrapper, ColumnDefinition, TableDefinition
 from multicorn.utils import log_to_postgres, WARNING
 
-
 from struct import pack, unpack
 from binascii import hexlify
+
+from .util import strtobool
 
 
 def unpack_fmt(typ, array):
@@ -80,27 +81,34 @@ class Rosbag(ForeignDataWrapper):
         self.topic = options.pop('topic', None)
         self.max_count = int(options.pop('max_count', 0))
         self.pcid = int(options.pop('pcid', 1))
+        self.metadata = strtobool(options.pop('metadata', 'false'))
         self.bag = Bag(self.filename, 'r')
         self.topics = self.bag.get_type_and_topic_info().topics
         self.infos = self.topics[self.topic]
-        self.columns = self.get_columns(self.bag, self.topic,
-                                        self.infos, self.pcid)
-        if columns:
-            cols = set(c[0] for c in self.columns)
-            missing = set(columns) - cols
-            columns = list(c for c in self.columns if c[0] in columns)
-            if missing:
-                missing = ", ".join(sorted(missing))
-                support = ", ".join(sorted(cols))
-                log_to_postgres(
-                    "extra unsupported columns : {}".format(missing), WARNING,
-                    hint="supported columns : {}".format(support))
-            self.columns = columns
-        self.unpack_fmt = {k: unpack_fmt(u, v) for k, u, v, _ in self.columns}
-        self.columns = {k: sql_fmt(k, u, v, w) for k, u, v, w in self.columns}
+
         if options:
-            log_to_postgres("extra unsupported options : {}".format(
+            log_to_postgres("extra unsupported options: {}".format(
                 options.keys()), WARNING)
+
+        if not self.metadata:
+            self.columns = self.get_columns(self.bag, self.topic,
+                                            self.infos, self.pcid)
+            if columns:
+                cols = set(c[0] for c in self.columns)
+                missing = set(columns) - cols
+                columns = list(c for c in self.columns if c[0] in columns)
+                if missing:
+                    missing = ", ".join(sorted(missing))
+                    support = ", ".join(sorted(cols))
+                    log_to_postgres(
+                        "extra unsupported columns : {}".format(missing),
+                        WARNING,
+                        hint="supported columns : {}".format(support))
+                self.columns = columns
+            self.unpack_fmt = {k: unpack_fmt(u, v)
+                               for k, u, v, _ in self.columns}
+            self.columns = {k: sql_fmt(k, u, v, w)
+                            for k, u, v, w in self.columns}
 
     @classmethod
     def import_schema(cls, schema, srv_options, options,
@@ -123,10 +131,27 @@ class Rosbag(ForeignDataWrapper):
             tableopts = {'topic': topic, 'rosbag': schema}
             res.append(TableDefinition(topic, columns=tablecols,
                                        options=tableopts))
+            if infos.msg_type == 'sensor_msgs/PointCloud2':
+                tableopts['metadata'] = 'true'
+                td = TableDefinition(
+                    topic + '_schema',
+                    columns=[sql_fmt('schema', 'string', '', '')],
+                    options=tableopts)
+                res.append(td)
         return res
 
     def execute(self, quals, columns):
         from rospy.rostime import Time
+
+        if self.metadata:
+            if self.infos.msg_type == 'sensor_msgs/PointCloud2':
+                _, msg, _ = next(self.bag.read_messages(topics=self.topic))
+                yield {'schema': self.get_schema(msg)}
+            else:
+                log_to_postgres('no metadata associated with {} '
+                                'messages'.format(self.infos.msg_type))
+            return
+
         tmin = None
         tmax = None
         for qual in quals:
@@ -151,7 +176,6 @@ class Rosbag(ForeignDataWrapper):
         res.append(("topic", "string", "", 0))
         res.append(("time", "uint64", "", 0))
         if infos.msg_type == 'sensor_msgs/PointCloud2':
-            res.append(("schema", "string", "", 0))
             res.append(("ply", "bytea", "", 0))
             res.append(("patch", "pcpatch", "", pcid))
         return res
@@ -258,8 +282,6 @@ class Rosbag(ForeignDataWrapper):
         if self.infos.msg_type == 'sensor_msgs/PointCloud2':
             if "patch" in columns:
                 gen["patch"] = self.get_patches(msg)
-            if "schema" in columns:
-                res["schema"] = self.get_schema(msg)
             if "ply" in columns:
                 gen["ply"] = self.get_plys(msg)
 

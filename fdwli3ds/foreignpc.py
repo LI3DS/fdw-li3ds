@@ -5,6 +5,8 @@ import xml.etree.ElementTree as etree
 
 from multicorn import ForeignDataWrapper
 
+from .util import strtobool
+
 
 # used to store dimension details
 dimension = namedtuple('dimensions', ['name', 'size', 'type', 'scale'])
@@ -29,7 +31,7 @@ class ForeignPcBase(ForeignDataWrapper):
         # pcid used to create WKB patchs
         self.pcid = int(options.get('pcid', 0))
         # next option is used to retrieve pcschema.xml back to postgres
-        self.metadata = options.get('metadata', False)
+        self.metadata = strtobool(options.get('metadata', 'false'))
         # get time offset if provided
         self.time_offset = float(options.get('time_offset', 0))
         # will store dimension infos

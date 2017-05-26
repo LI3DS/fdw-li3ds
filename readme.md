@@ -55,19 +55,19 @@ create extension if not exists pointcloud;
 drop extension multicorn cascade;
 create extension multicorn;
 
-create server echopulse foreign data wrapper multicorn
+create server echopulseserver foreign data wrapper multicorn
     options (
         wrapper 'fdwli3ds.EchoPulse'
+        , directory 'data/echopulse'
     );
 
 -- create foreign table to retrieve the pointcloud schema dynamically
 create foreign table myechopulse_schema (
     schema text
 )
-server echopulse
+server echopulseserver
     options (
-        directory 'data/echopulse'
-        , metadata 'true'
+        metadata 'true'
     );
 
 insert into pointcloud_formats(pcid, srid, schema)
@@ -75,10 +75,9 @@ select 1, -1, schema from myechopulse_schema;
 
 create foreign table myechopulse (
     points pcpatch(1)
-) server echopulse
+) server echopulseserver
     options (
-        directory 'data/echopulse'
-        , patch_size '400'
+        patch_size '400'
         , pcid '1'
     );
 
@@ -96,7 +95,7 @@ create server sbetserver foreign data wrapper multicorn
 create foreign table mysbet_schema (
     schema text
 )
-server sbeserver
+server sbetserver
  options (
     metadata 'true'
 );
@@ -154,9 +153,19 @@ select * from rosbag_imu limit 20;
 Create foreign table for the `/Laser/velodyne_points` topic:
 
 ```sql
+create foreign table rosbag_pointcloud2_format (
+    schema text
+) server rosbagserver
+    options (
+        topic '/Laser/velodyne_points'
+        , metadata 'true'
+);
+
+insert into pointcloud_formats (pcid, srid, schema)
+select 3, 4326, schema from rosbag_pointcloud2_format;
+
 create foreign table rosbag_pointcloud2 (
-    schema character varying
-    , patch pcpatch(3)
+    patch pcpatch(3)
     , ply bytea
     , width int
     , height int
@@ -167,11 +176,6 @@ create foreign table rosbag_pointcloud2 (
         , max_count '10000'
 );
 
--- register the pointcloud schema (only once!)
-insert into pointcloud_formats
-select 3 as pcid, 4326 as srid, schema
-from rosbag_pointcloud2
-limit 1;
 
 select sum(width*height) from rosbag_pointcloud2;
 select sum(pc_numpoints(patch)) from rosbag_pointcloud2;
