@@ -1,5 +1,8 @@
 # Foreign Data Wrappers for LI³DS
 
+
+[![Travis](https://img.shields.io/travis/LI3DS/fdw-li3ds.svg?style=flat-square)]()
+
 This repo includes [Multicorn](http://multicorn.org/)-based [Foreign Data
 Wrappers](https://www.postgresql.org/docs/current/static/fdwhandler.html)
 for exposing LI³DS data as PostgreSQL tables.

@@ -17,3 +17,11 @@ install:
 script:
 - flake8 fdwli3ds
 - source /opt/ros/indigo/setup.bash && py.test -v test
+
+after_success:
+  - 'test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && curl -H
+    "Content-Type: application/json" -X POST https://registry.hub.docker.com/u/li3ds/li3ds/trigger/$DOCKER_API_KEY/'
+
+env:
+  global:
+    secure: hJeJ+9rXWZk32eB48JHQ/iYR+vzYJO6RHZvD4SPAql4veVJxFu6DN6tybER+kGV/IkFjCms8zmaxOaqj76W06Qv8bOIlpcgk0vu3dYtdtoDJ7ospgyjXwLso9zrpSJaaI14qSqASmDpOUJFbbxrtkaM3YdF5JUnSo8P3ETeaCqYYYHOjew6Oc46PY0TMoWKjcWqC+ObzQyAgFgj13wfK+/7oeCPytiasrJ0Dz6MrrC4qdbfLMvFrXU9lHxy73nr9Hxy3sK8YYzHMu/t2izJF8LmrnoTQc2jgv6LhUQ5KpESNYNwC4NKNqTmkRUN52Pu1CrlXVs1gs5EygfVlQA3YrxVoOQRswsL0IrPYG639RnFAX4kXWQaNggSLGPot9rn17GCb68bWE62K2/ze5ufgOuHiplReaPk/XT7ONQqC/fF9iiZbP9kEvIP4XlGBrOzyzxfcmlTvZVWh2KrQUAm3mo4XaaLiSwDFM4ayXlOdHEtUpD1ozdmQRJagDWXbnhxWKl/bPb+FmJKQ4PYnVN6r44CtPNFroWysLivkJCLbX5emqxMTbbOK7f87vCxTO4Z/OEVUdeQo8ehLh++mhh9YJER1G5WEQyXq/SuVgGzV3gg/kCDdKW9Dc3QcU1ZZbOFDtLCUBgbKgosUYP+m1S1cFPNHOE30qcnj4hWPo9IBuIs=
