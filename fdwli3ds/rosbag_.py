@@ -174,7 +174,7 @@ def get_columns(bag, topic, infos, pcid, patch_column, patch_columns):
 
 def get_columns_from_message(msg, cols=[], typ_suffix=""):
     if len(msg.__slots__) == 1:
-        attr = object.__getattribute__(msg, msg.__slots__[0])
+        attr = getattr(msg, msg.__slots__[0])
         if isinstance(attr, list):
             msg = attr[0]
     terminal_types = {
@@ -193,7 +193,7 @@ def get_columns_from_message(msg, cols=[], typ_suffix=""):
         if pos_array > 0:
             subtyp_suffix += typ[pos_array:]
             typ = typ[:pos_array]
-        attr = object.__getattribute__(msg, col)
+        attr = getattr(msg, col)
         count = 1
         if hasattr(attr, '__len__'):
             count = len(attr)
@@ -369,7 +369,7 @@ class Rosbag(ForeignDataWrapper):
 
     def get_rows(self, topic, msg, t, columns, toplevel=True):
         if toplevel and len(msg.__slots__) == 1:
-            attr = object.__getattribute__(msg, msg.__slots__[0])
+            attr = getattr(msg, msg.__slots__[0])
             if isinstance(attr, list):
                 for msg in attr:
                     for row in self.get_rows(topic, msg, t, columns, False):
@@ -399,9 +399,9 @@ class Rosbag(ForeignDataWrapper):
             attr = msg
             for col in column.split('.'):
                 if isinstance(attr, list):
-                    attr = tuple(object.__getattribute__(a, col) for a in attr)
+                    attr = tuple(getattr(a, col) for a in attr)
                 else:
-                    attr = object.__getattribute__(attr, col)
+                    attr = getattr(attr, col)
             if hasattr(attr, "to_nsec"):
                 attr = attr.to_nsec()
             elif hasattr(attr, "x"):
