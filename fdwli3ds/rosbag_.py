@@ -231,7 +231,7 @@ class Rosbag(ForeignDataWrapper):
         self.topic = options.pop('topic', None)
         pointcloud_formats = strtobool(options.pop('metadata', 'false'))
 
-        self.patch_column = options.pop('patch_column', 'patch').strip()
+        self.patch_column = options.pop('patch_column', 'points').strip()
         self.patch_columns = options.pop('patch_columns', '*').strip()
         self.patch_columns = [col.strip() for col in self.patch_columns.split(',') if col.strip()]
 
@@ -293,7 +293,7 @@ class Rosbag(ForeignDataWrapper):
         Bag = import_bag(srv_options)
         pcid_str = options.pop('pcid', srv_options.pop('pcid', 0))
         pcid = int(pcid_str)
-        patch_column = options.pop('patch_column', srv_options.pop('patch_column', 'patch'))
+        patch_column = options.pop('patch_column', srv_options.pop('patch_column', 'points'))
         patch_columns = options.pop('patch_columns', '*').strip()
         patch_columns = [col.strip() for col in patch_columns.split(',') if col.strip()]
         filename = srv_options.pop('rosbag_path', "") + options.pop('rosbag_path', "") + schema

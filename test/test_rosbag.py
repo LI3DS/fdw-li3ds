@@ -59,18 +59,18 @@ def test_laser_read_schema(schema_laser):
 
 
 def test_laser_read_patch(reader_laser):
-    result = next(reader_laser.execute([], ('topic', 'time', 'patch', 'ply')))
+    result = next(reader_laser.execute([], ('topic', 'time', 'points', 'ply')))
     assert isinstance(result, dict)
     assert len(result) == 4
     assert 'topic' in result
     assert 'time' in result
-    assert 'patch' in result
+    assert 'points' in result
     assert 'ply' in result
 
 
 def test_laser_patch_size(reader_laser_max_count):
-    result = next(reader_laser_max_count.execute([], ('patch', )))
+    result = next(reader_laser_max_count.execute([], ('points', )))
     # point size: 32 bytes
     # patch header size: 13 bytes
     patch_size = 13 + reader_laser_max_count.patch_count_pointcloud * 32
-    assert len(unhexlify(result['patch'])) == patch_size
+    assert len(unhexlify(result['points'])) == patch_size
