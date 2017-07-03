@@ -5,6 +5,8 @@ from binascii import hexlify
 from multicorn import ForeignDataWrapper, ColumnDefinition, TableDefinition
 from multicorn.utils import log_to_postgres, WARNING
 
+from .util import strtobool
+
 
 struct_fmt_dict = {
     'int8': 'b',
@@ -227,7 +229,7 @@ class Rosbag(ForeignDataWrapper):
         Bag = import_bag(options)
         self.filename = options.pop('rosbag_path', "") + options.pop('rosbag')
         self.topic = options.pop('topic', None)
-        pointcloud_formats = options.pop('metadata', 'false') == 'true'
+        pointcloud_formats = strtobool(options.pop('metadata', 'false'))
 
         self.patch_column = options.pop('patch_column', 'patch').strip()
         self.patch_columns = options.pop('patch_columns', '*').strip()
