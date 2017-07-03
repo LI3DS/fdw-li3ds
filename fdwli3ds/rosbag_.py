@@ -3,7 +3,7 @@ from struct import pack, unpack, calcsize
 from binascii import hexlify
 
 from multicorn import ForeignDataWrapper, ColumnDefinition, TableDefinition
-from multicorn.utils import log_to_postgres, WARNING
+from multicorn.utils import log_to_postgres, ERROR, WARNING
 
 from .util import strtobool
 
@@ -244,6 +244,7 @@ class Rosbag(ForeignDataWrapper):
         self.bag = Bag(self.filename, 'r')
         self.topics = self.bag.get_type_and_topic_info().topics
         self.pointcloud_formats = None
+
         if pointcloud_formats:
             self.pointcloud_formats = []
             topics = self.topic.split(',') if self.topic else self.topics
@@ -265,7 +266,9 @@ class Rosbag(ForeignDataWrapper):
                 })
             return
 
-        self.pcid += 1 + self.topics.keys().index(self.topic)
+        if not self.topic:
+            log_to_postgres('"topic" option is required', ERROR)
+
         self.infos = self.topics[self.topic]
         (self.columns, self.patch_schema, self.patch_ply_header, self.endianness,
          self.patch_columns, self.patch_srid) = \
@@ -326,10 +329,11 @@ class Rosbag(ForeignDataWrapper):
                                              options=tableopts))
 
         for topic, infos in topics.items():
-            columns, _, _, _, _, _ = get_columns(bag, topic, infos, pcid_for_topic[topic],
+            pcid = pcid_for_topic[topic]
+            columns, _, _, _, _, _ = get_columns(bag, topic, infos, pcid,
                                                  patch_column, patch_columns)
             tablecols = [get_column_def(k, *v) for k, v in columns.items()]
-            tableopts = {'topic': topic, 'rosbag': schema, 'pcid': pcid_str}
+            tableopts = {'topic': topic, 'rosbag': schema, 'pcid': str(pcid)}
             tabledefs.append(TableDefinition(topic, columns=tablecols, options=tableopts))
         return tabledefs
 
