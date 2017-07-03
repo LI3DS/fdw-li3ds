@@ -176,7 +176,7 @@ create foreign table rosbag_pointcloud2 (
     options (
         topic '/Laser/velodyne_points'
         , pcid '3'
-        , max_count '10000'
+        , patch_count_pointcloud '10000'
 );
 
 
