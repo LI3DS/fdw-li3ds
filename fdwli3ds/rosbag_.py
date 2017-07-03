@@ -177,7 +177,7 @@ class Rosbag(ForeignDataWrapper):
         res.append(("time", "uint64", "", 0))
         if infos.msg_type == 'sensor_msgs/PointCloud2':
             res.append(("ply", "bytea", "", 0))
-            res.append(("patch", "pcpatch", "", pcid))
+            res.append(("points", "pcpatch", "", pcid))
         return res
 
     @classmethod
@@ -241,7 +241,7 @@ class Rosbag(ForeignDataWrapper):
             h = header.format(offset, offset / msg.point_step, count)
             yield h + data
 
-    def get_patches(self, msg):
+    def get_points(self, msg):
         endianness = 0 if msg.is_bigendian else 1
         fmt = ['>b3I', '<b3I'][endianness]
         for offset, count, data in get_split(msg.data, msg.row_step,
@@ -280,8 +280,8 @@ class Rosbag(ForeignDataWrapper):
         if "time" in columns:
             res["time"] = t.to_nsec()
         if self.infos.msg_type == 'sensor_msgs/PointCloud2':
-            if "patch" in columns:
-                gen["patch"] = self.get_patches(msg)
+            if "points" in columns:
+                gen["points"] = self.get_points(msg)
             if "ply" in columns:
                 gen["ply"] = self.get_plys(msg)
 
