@@ -6,6 +6,7 @@ import glob
 from struct import pack
 from collections import defaultdict, namedtuple
 from binascii import hexlify
+from StringIO import StringIO
 
 import numpy as np
 from multicorn.utils import log_to_postgres
@@ -15,18 +16,43 @@ from .foreignpc import ForeignPcBase
 # pattern for the echo/pulse schema directory
 subtree_pattern = re.compile(r'^(echo|pulse)-([\w\d]+)-(.*)$')
 
-# since pgpointcloud requires x and y dimensions we don't have them
-# on raw data so we map the couple (x,y) to some raw dimensions
-pcschema2raw = {
-    'x': 'time',
-    'y': 'theta',
-    'z': 'range'
-}
-
 # used to store dimension details
 dimension = namedtuple('dimensions', ['name', 'size', 'type', 'scale'])
 
-PC_NAMESPACE = '{http://pointcloud.org/schemas/PC/1.1}'
+schema_skeleton = """<?xml version="1.0" encoding="UTF-8"?>
+<pc:PointCloudSchema xmlns:pc="http://pointcloud.org/schemas/PC/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+{dimensions}
+<pc:metadata>
+    <Metadata name="compression">dimensional</Metadata>
+</pc:metadata>
+</pc:PointCloudSchema>
+"""
+
+xml_dimension = """<pc:dimension>
+    <pc:position>{}</pc:position>
+    <pc:size>{}</pc:size>
+    <pc:name>{}</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>{}</pc:interpretation>
+</pc:dimension>"""
+
+
+def get_types(intype):
+    mapper = {
+        'linear': 'float64',
+    }
+    return mapper.get(intype, intype)
+
+
+def get_size(strtype):
+    """
+    returns size in bytes from a string like float32
+    """
+    if strtype == 'linear':
+        # linear time is always a double
+        return 8
+    return int(re.search(r'\d+', strtype).group()) / 8
 
 
 class EchoPulse(ForeignPcBase):
@@ -41,19 +67,75 @@ class EchoPulse(ForeignPcBase):
         """
         super(EchoPulse, self).__init__(options, columns)
         # Resolve data files found in directory
-        directory = options['directory']
-        sources = (source for source in os.listdir(directory)
+        self.basedir = options['directory']
+        sources = (source for source in os.listdir(self.basedir)
                    if subtree_pattern.match(source))
         self.source_dirs = [
-            os.path.realpath(os.path.join(directory, source))
+            os.path.realpath(os.path.join(self.basedir, source))
             for source in sources
-            if os.path.isdir(os.path.join(directory, source))
+            if os.path.isdir(os.path.join(self.basedir, source))
         ]
-        # pcschema.xml must be present in the directory
-        self.pcschema = os.path.join(options['directory'], 'pcschema.xml')
+        # default mapping for coordinates
+        self.new_dimnames = {
+            'range': 'x',
+            'theta': 'y',
+            'phi': 'z'
+        }
+        # get custom mapping given in options
+        varmapping = [
+            opt for opt in options.keys()
+            if opt.startswith('map_')
+        ]
+        for var in varmapping:
+            self.new_dimnames.update({var.strip('map_'): options[var]})
+
+        # get pointcloud structure from the directory tree
+        self.ordered_dims = self.scan_structure()
 
         log_to_postgres('{} echo/pulse directories linked'
                         .format(len(self.source_dirs)))
+
+    @property
+    def pcschema(self):
+        xml = schema_skeleton.format(
+            dimensions='\n'.join([
+                xml_dimension.format(idx, size, self.new_dimnames.get(name, name), dtype)
+                for idx, size, name, dtype in self.ordered_dims
+            ])
+        )
+        return StringIO(xml)
+
+    def scan_structure(self):
+        """
+        Scan directory structure and generate the appropriate
+        pointcloud schema.
+        One directory corresponds to one dimension.
+        Dimensions are always ordered by alphabetical order for idempotence
+        Returns a tuple like that:
+            [
+                (1, 32, 'phi', 'float32'),
+                (2, 8, 'n_echo', 'uint8'),
+                ...
+            ]
+        """
+        dimensions = []
+        for subdir in os.listdir(self.basedir):
+            if not subdir.startswith('echo') and not subdir.startswith('pulse'):
+                # dimension directory should start with the signal type
+                continue
+            _, dtype, name = subdir.split('-')
+            dimensions.append((
+                get_size(dtype),
+                name,
+                get_types(dtype)))
+
+        # add the echo index (computed in the code above)
+        dimensions.append(('1', 'echo', 'int8'))
+
+        return [
+            (idx, dim[0], dim[1], dim[2])
+            for idx, dim in enumerate(sorted(dimensions, key=lambda x: x[1]), start=1)
+        ]
 
     def execute(self, quals, columns):
         """
@@ -92,9 +174,7 @@ class EchoPulse(ForeignPcBase):
 
         source_files_count = set()
         directories = []
-        self.raw_dimensions = [
-            pcschema2raw.get(dim.name, dim.name)
-            for dim in self.dimensions]
+        self.raw_dimensions = [name for s, _, name, _ in self.ordered_dims]
 
         for sdir in self.source_dirs:
             filelist = [sfi for sfi in glob.glob(os.path.join(sdir, '*'))]
@@ -111,7 +191,7 @@ class EchoPulse(ForeignPcBase):
 
         # sort on signal and datatype
         directories.sort(
-            key=lambda x: (x[1], x[2] == 'linear', x[3] == 'num_echoes'),
+            key=lambda x: (x[1], x[2] == 'linear', x[3] == 'n_echo'),
             reverse=True
         )
 
@@ -203,7 +283,7 @@ class EchoPulse(ForeignPcBase):
         echo_arrays = {}
         echos = frame['echo']
 
-        vec_echo = pulse_arrays['num_echoes']
+        vec_echo = pulse_arrays['n_echo']
         nechos = np.sum(vec_echo)
 
         # get zero indices and scale to indices in echo space !
@@ -224,18 +304,18 @@ class EchoPulse(ForeignPcBase):
         echo_arrays['echo'] = np.insert(
             echo_arrays['echo'], zero_indices, 0).astype('uint8')
 
-        # Duplicate all items in pulse arrays according to num_echoes number
-        # We must create a copy of num_echoes array with zero values replaced
+        # Duplicate all items in pulse arrays according to n_echo number
+        # We must create a copy of n_echo array with zero values replaced
         # by 1 in order to repeat correctly items without deleting zero items
-        num_echoes_copy = pulse_arrays['num_echoes'].copy()
+        n_echo_copy = pulse_arrays['n_echo'].copy()
 
         # remove zero value in order to use the repeat function without
         # deleting rows
-        num_echoes_copy[num_echoes_copy == 0] = 1
+        n_echo_copy[n_echo_copy == 0] = 1
 
         # duplicate rows having more than 1 echoe
         for name, p in pulse_arrays.items():
-            pulse_arrays[name] = pulse_arrays[name].repeat(num_echoes_copy)
+            pulse_arrays[name] = pulse_arrays[name].repeat(n_echo_copy)
 
         pulse_arrays.update(echo_arrays)
         # return ordered arrays according to xml schema

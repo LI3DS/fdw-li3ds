@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import struct
 from binascii import unhexlify
 
 import numpy as np
@@ -49,6 +50,20 @@ def schema(scope='module'):
     return ept
 
 
+@pytest.fixture
+def schema_with_mapping(scope='module'):
+    ept = EchoPulse(
+        options={
+            'directory': data_dir,
+            'metadata': 'true',
+            'map_x': 'range',
+            'map_time': 'the_time'
+        },
+        columns=None
+    )
+    return ept
+
+
 def test_read_schema(schema):
     result = next(schema.execute(None, None))
     assert isinstance(result, dict)
@@ -56,10 +71,29 @@ def test_read_schema(schema):
     assert len(result['schema']) > 0
 
 
+def test_schema_structure(schema):
+    result = next(schema.execute(None, None))
+    pcschema = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'data/echopulse/pcschema.xml')
+    assert isinstance(result, dict)
+    assert 'schema' in result
+    with open(pcschema) as xmlref:
+        ref = xmlref.read()
+        assert result['schema'] == ref
+
+
+def test_schema_with_mapping(schema_with_mapping):
+    assert 'the_time' in [dim.name for dim in schema_with_mapping.dimensions]
+    assert 'float64' == [
+        dim.type for dim in schema_with_mapping.dimensions
+        if dim.name == 'the_time'
+    ][0]
+
+
 def test_dimension_list(schema):
-    assert [dim.name for dim in schema.dimensions] == [
-        'x', 'y', 'z',
-        'phi', 'reflectance', 'deviation', 'amplitude', 'num_echoes', 'echo'
+    assert sorted([dim.name for dim in schema.dimensions]) == [
+        'amplitude', 'deviation', 'echo',
+        'n_echo', 'reflectance', 'time', 'x', 'y', 'z',
     ]
 
 
@@ -95,12 +129,29 @@ def test_point_count(reader):
 def test_time_offset(reader_offset, reader):
     patch = next(reader.execute(None, None))
     patch_offset = next(reader_offset.execute(None, None))
-    patch_nohead = unhexlify(patch['points'])[18:]
-    patch_offset_nohead = unhexlify(patch_offset['points'])[18:]
-    # read first dim (should be X -> time, hardcoded here)
-    x_dim = [(dim.size, dim.type) for dim in reader.dimensions
-             if dim.name == 'x'][0]
-    values = np.fromstring(patch_nohead, dtype=x_dim[1], count=int(x_dim[0]))
-    values_offset = np.fromstring(patch_offset_nohead, dtype=x_dim[1],
-                                  count=int(x_dim[0]))
-    assert float(values_offset[0] - values[0]) == 1300000
+    print('toffset : ', reader_offset.time_offset)
+    patch_nohead = unhexlify(patch['points'])
+    patch_offset_nohead = unhexlify(patch_offset['points'])
+    times = extract_dimension(patch_nohead, reader.dimensions, 'time')
+    times_offset = extract_dimension(patch_offset_nohead, reader_offset.dimensions, 'time')
+    assert float(times_offset[0] - times[0]) == 1300000
+
+
+def extract_dimension(patch, dimensions, name):
+    '''
+    Extract a dimension in a patch with dimensional compression.
+    Returns a numpy array
+    '''
+    # compute the offset needed to find the dimension
+    # first offset is for the patch header
+    offset = 13
+    for dim in dimensions:
+        # skip dimensional type on 1b
+        print('type: ', struct.unpack('<b', patch[offset]))
+        dimsize = int(struct.unpack('<I', patch[offset + 1: offset + 5])[0])
+        if dim.name == name:
+            # dimension found!
+            break
+        offset += 5 + dimsize
+        print(dim.name, dim.size, dimsize, offset)
+    return np.fromstring(patch[offset + 5:offset + 5 + dimsize], dtype=dim.type)
