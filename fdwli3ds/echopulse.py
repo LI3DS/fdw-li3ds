@@ -99,7 +99,9 @@ class EchoPulse(ForeignPcBase):
     def pcschema(self):
         xml = schema_skeleton.format(
             dimensions='\n'.join([
-                xml_dimension.format(idx, size, self.new_dimnames.get(name, name), dtype)
+                xml_dimension.format(
+                    idx, size,
+                    self.new_dimnames.get(name, name), dtype)
                 for idx, size, name, dtype in self.ordered_dims
             ])
         )
@@ -120,7 +122,8 @@ class EchoPulse(ForeignPcBase):
         """
         dimensions = []
         for subdir in os.listdir(self.basedir):
-            if not subdir.startswith('echo') and not subdir.startswith('pulse'):
+            if not subdir.startswith('echo') and \
+               not subdir.startswith('pulse'):
                 # dimension directory should start with the signal type
                 continue
             _, dtype, name = subdir.split('-')
@@ -131,10 +134,10 @@ class EchoPulse(ForeignPcBase):
 
         # add the echo index (computed in the code above)
         dimensions.append(('1', 'echo', 'int8'))
-
+        sorted_dims = sorted(dimensions, key=lambda x: x[1])
         return [
             (idx, dim[0], dim[1], dim[2])
-            for idx, dim in enumerate(sorted(dimensions, key=lambda x: x[1]), start=1)
+            for idx, dim in enumerate(sorted_dims, start=1)
         ]
 
     def execute(self, quals, columns):

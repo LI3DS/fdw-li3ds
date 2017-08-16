@@ -74,7 +74,8 @@ def test_read_schema(schema):
 def test_schema_structure(schema):
     result = next(schema.execute(None, None))
     pcschema = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'data/echopulse/pcschema.xml')
+        os.path.abspath(os.path.dirname(__file__)),
+        'data/echopulse/pcschema.xml')
     assert isinstance(result, dict)
     assert 'schema' in result
     with open(pcschema) as xmlref:
@@ -132,7 +133,9 @@ def test_time_offset(reader_offset, reader):
     patch_nohead = unhexlify(patch['points'])
     patch_offset_nohead = unhexlify(patch_offset['points'])
     times = extract_dimension(patch_nohead, reader.dimensions, 'time')
-    times_offset = extract_dimension(patch_offset_nohead, reader_offset.dimensions, 'time')
+    times_offset = extract_dimension(patch_offset_nohead,
+                                     reader_offset.dimensions,
+                                     'time')
     assert float(times_offset[0] - times[0]) == 1300000
 
 
@@ -151,4 +154,6 @@ def extract_dimension(patch, dimensions, name):
             # dimension found!
             break
         offset += 5 + dimsize
-    return np.fromstring(patch[offset + 5:offset + 5 + dimsize], dtype=dim.type)
+    return np.fromstring(
+        patch[offset + 5:offset + 5 + dimsize],
+        dtype=dim.type)
