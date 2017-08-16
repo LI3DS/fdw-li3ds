@@ -129,7 +129,6 @@ def test_point_count(reader):
 def test_time_offset(reader_offset, reader):
     patch = next(reader.execute(None, None))
     patch_offset = next(reader_offset.execute(None, None))
-    print('toffset : ', reader_offset.time_offset)
     patch_nohead = unhexlify(patch['points'])
     patch_offset_nohead = unhexlify(patch_offset['points'])
     times = extract_dimension(patch_nohead, reader.dimensions, 'time')
@@ -147,11 +146,9 @@ def extract_dimension(patch, dimensions, name):
     offset = 13
     for dim in dimensions:
         # skip dimensional type on 1b
-        print('type: ', struct.unpack('<b', patch[offset]))
         dimsize = int(struct.unpack('<I', patch[offset + 1: offset + 5])[0])
         if dim.name == name:
             # dimension found!
             break
         offset += 5 + dimsize
-        print(dim.name, dim.size, dimsize, offset)
     return np.fromstring(patch[offset + 5:offset + 5 + dimsize], dtype=dim.type)
