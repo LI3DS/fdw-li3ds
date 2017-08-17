@@ -38,11 +38,13 @@ xml_dimension = """<pc:dimension>
 </pc:dimension>"""
 
 
+TYPE_MAPPER = {
+    'linear': 'float64',
+}
+
+
 def get_types(intype):
-    mapper = {
-        'linear': 'float64',
-    }
-    return mapper.get(intype, intype)
+    return TYPE_MAPPER.get(intype, intype)
 
 
 def get_size(strtype):
