@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from StringIO import StringIO
 from collections import namedtuple
 import xml.etree.ElementTree as etree
 
@@ -43,9 +44,11 @@ class ForeignPcBase(ForeignDataWrapper):
         The schema document format used by PostgreSQL Pointcloud is the same
         one used by the PDAL library.
         """
-        content = ''
-        with open(self.pcschema) as f:
-            content = f.read()
+        if isinstance(self.pcschema, StringIO):
+            content = self.pcschema.read()
+        else:
+            with open(self.pcschema) as f:
+                content = f.read()
         return content
 
     @property

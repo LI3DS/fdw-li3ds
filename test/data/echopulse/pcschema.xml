@@ -3,66 +3,66 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <pc:dimension>
     <pc:position>1</pc:position>
-    <pc:size>8</pc:size>
-    <pc:name>x</pc:name>
-    <pc:description>seconds of week in GPS time system</pc:description>
-    <pc:interpretation>double</pc:interpretation>
+    <pc:size>4</pc:size>
+    <pc:name>amplitude</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>2</pc:position>
-    <pc:size>4</pc:size>
-    <pc:name>y</pc:name>
-    <pc:description>theta</pc:description>
-    <pc:interpretation>float32</pc:interpretation>
+    <pc:size>1</pc:size>
+    <pc:name>deviation</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>uint8</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>3</pc:position>
-    <pc:size>4</pc:size>
-    <pc:name>z</pc:name>
-    <pc:description>range</pc:description>
-    <pc:interpretation>float32</pc:interpretation>
+    <pc:size>1</pc:size>
+    <pc:name>echo</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>int8</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>4</pc:position>
-    <pc:size>4</pc:size>
-    <pc:name>phi</pc:name>
-    <pc:description>phi</pc:description>
-    <pc:interpretation>float32</pc:interpretation>
+    <pc:size>1</pc:size>
+    <pc:name>n_echo</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>uint8</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>5</pc:position>
     <pc:size>4</pc:size>
-    <pc:name>reflectance</pc:name>
-    <pc:description>reflectance</pc:description>
+    <pc:name>z</pc:name>
+    <pc:description></pc:description>
     <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>6</pc:position>
-    <pc:size>1</pc:size>
-    <pc:name>deviation</pc:name>
-    <pc:description>deviation</pc:description>
-    <pc:interpretation>int8</pc:interpretation>
+    <pc:size>4</pc:size>
+    <pc:name>x</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>7</pc:position>
     <pc:size>4</pc:size>
-    <pc:name>amplitude</pc:name>
-    <pc:description>amplitude</pc:description>
+    <pc:name>reflectance</pc:name>
+    <pc:description></pc:description>
     <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>8</pc:position>
-    <pc:size>1</pc:size>
-    <pc:name>num_echoes</pc:name>
-    <pc:description>number of echoes</pc:description>
-    <pc:interpretation>int8</pc:interpretation>
+    <pc:size>4</pc:size>
+    <pc:name>y</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>float32</pc:interpretation>
 </pc:dimension>
 <pc:dimension>
     <pc:position>9</pc:position>
-    <pc:size>1</pc:size>
-    <pc:name>echo</pc:name>
-    <pc:description>echo index</pc:description>
-    <pc:interpretation>int8</pc:interpretation>
+    <pc:size>8</pc:size>
+    <pc:name>time</pc:name>
+    <pc:description></pc:description>
+    <pc:interpretation>float64</pc:interpretation>
 </pc:dimension>
 <pc:metadata>
     <Metadata name="compression">dimensional</Metadata>
