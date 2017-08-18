@@ -62,7 +62,7 @@
     <pc:size>8</pc:size>
     <pc:name>time</pc:name>
     <pc:description></pc:description>
-    <pc:interpretation>float64</pc:interpretation>
+    <pc:interpretation>double</pc:interpretation>
 </pc:dimension>
 <pc:metadata>
     <Metadata name="compression">dimensional</Metadata>

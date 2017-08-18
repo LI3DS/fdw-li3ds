@@ -85,7 +85,7 @@ def test_schema_structure(schema):
 
 def test_schema_with_mapping(schema_with_mapping):
     assert 'the_time' in [dim.name for dim in schema_with_mapping.dimensions]
-    assert 'float64' == [
+    assert 'double' == [
         dim.type for dim in schema_with_mapping.dimensions
         if dim.name == 'the_time'
     ][0]
