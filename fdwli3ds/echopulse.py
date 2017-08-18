@@ -39,7 +39,7 @@ xml_dimension = """<pc:dimension>
 
 
 TYPE_MAPPER = {
-    'linear': 'float64',
+    'linear': 'double',
 }
 
 
