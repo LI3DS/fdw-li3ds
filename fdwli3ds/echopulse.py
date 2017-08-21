@@ -203,7 +203,7 @@ class EchoPulse(ForeignPcBase):
         # check consistency, sub directories must have the same number of files
         if len(source_files_count) != 1:
             raise Exception('Consistency failed, bad number of files in '
-                            'source directories')
+                            'source directories {}'.format(str(source_files_count)))
 
         framelist = []
 
@@ -236,7 +236,6 @@ class EchoPulse(ForeignPcBase):
             # read frame
             att_array = self.read_ept(frame)
             att_size = len(att_array[0][1])
-
             # generating slices for accessing subarrays
             # [slice(0, 100),
             #  slice(100, 200),
@@ -284,7 +283,6 @@ class EchoPulse(ForeignPcBase):
             np.ones(nentries, dtype='float64') * t0 +
             np.arange(nentries, dtype='float64') * delta
         )
-
         echo_arrays = {}
         echos = frame['echo']
 
