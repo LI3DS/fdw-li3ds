@@ -30,7 +30,7 @@ def reader_offset(scope='module'):
         options={
             'sources': sbet_file,
             'pcid': '1',
-            'timeoffset': '1300000'
+            'time_offset': '1300000'
         },
         columns=None
     )
@@ -116,6 +116,22 @@ def test_point_count(reader):
     ])
     point_size = sum(int(dim.size) for dim in reader.dimensions)
     assert allpatch_size / point_size == 50000
+
+
+def test_time_offset(reader_offset, reader):
+    patch = next(reader.execute(None, None))
+    patch_offset = next(reader_offset.execute(None, None))
+    patch_nohead = unhexlify(patch['points'])
+    patch_offset_nohead = unhexlify(patch_offset['points'])
+    times = extract_dimension(
+        patch_nohead,
+        reader.dimensions,
+        'm_time')
+    times_offset = extract_dimension(
+        patch_offset_nohead,
+        reader_offset.dimensions,
+        'm_time')
+    assert times_offset[0] - times[0] == 1300000
 
 
 def test_nonoverlap_patch(reader):

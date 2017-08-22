@@ -15,7 +15,7 @@ def extract_dimension(patch, dimensions, name, compression=None):
     if not compression:
         dtype = [(dim.name, dim.type) for dim in dimensions]
         # convert to degrees and apply scale factor
-        return np.fromstring(patch[13:], dtype=dtype)
+        return np.fromstring(patch[13:], dtype=dtype)[name]
 
     if compression == 'dimensional':
         dim_header = 5

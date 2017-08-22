@@ -81,7 +81,7 @@ create foreign table myechopulse (
 ) server echopulseserver
     options (
         patch_size '400'
-        , pcid '1'
+        , pcid '1' 
     );
 
 select * from myechopulse;
@@ -113,6 +113,7 @@ create foreign table mysbet (
         sources 'data/sbet/sbet.bin'
         , patch_size '100'
         , pcid '2'
+        , overlap 'true' -- overlaps avoids time gaps between patches
 );
 
 
