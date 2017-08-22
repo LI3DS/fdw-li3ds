@@ -10,6 +10,7 @@ import numpy as np
 from multicorn.utils import log_to_postgres
 
 from .foreignpc import ForeignPcBase
+from .util import strtobool
 
 
 class Sbet(ForeignPcBase):
@@ -38,6 +39,9 @@ class Sbet(ForeignPcBase):
         # sbet schema is provided
         self.pcschema = os.path.join(os.path.dirname(__file__),
                                      'schemas', 'sbetschema.xml')
+        # add overlap option (which add the previous point in each patch and build
+        # a continuous timeline for trajectories)
+        self.overlap = strtobool(options.get('overlap', 'True'))
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table
@@ -103,7 +107,10 @@ class Sbet(ForeignPcBase):
             # append the end of the array
             slices.append(slice(slices[-1].stop, sbet_size))
 
-        for sli in slices:
+        last_one = None
+
+        for idx, sli in enumerate(slices):
+
             subarray = sbet[sli]
             # convert to degrees and apply scale factor
             subarray['x'] = rad2deg_scaled_x * subarray['x']
@@ -112,5 +119,14 @@ class Sbet(ForeignPcBase):
             subarray['m_time'] += self.time_offset
             # cast to pointcloud xml schema types
             subarray = subarray.astype(sbet_patch_type)
-            header = pack('<b3I', 1, self.pcid, 0, sli.stop - sli.start)
-            yield {'points': hexlify(header + subarray.tostring())}
+
+            if idx > 0 and self.overlap:
+                header = pack('<b3I', 1, self.pcid, 0, sli.stop - sli.start + 1)
+                data = hexlify(header + last_one.tostring() + subarray.tostring())
+                # overlap option: repeat the last values from the previous patch
+                last_one = subarray[-1]
+                yield {'points': data}
+            else:
+                header = pack('<b3I', 1, self.pcid, 0, sli.stop - sli.start)
+                last_one = subarray[-1]
+                yield {'points': hexlify(header + subarray.tostring())}

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import struct
 from binascii import unhexlify
 
-import numpy as np
 import pytest
 
 from fdwli3ds import EchoPulse
+from fdwli3ds.util import extract_dimension
 
 data_dir = os.path.join(
     os.path.dirname(__file__), 'data', 'echopulse')
@@ -132,28 +131,14 @@ def test_time_offset(reader_offset, reader):
     patch_offset = next(reader_offset.execute(None, None))
     patch_nohead = unhexlify(patch['points'])
     patch_offset_nohead = unhexlify(patch_offset['points'])
-    times = extract_dimension(patch_nohead, reader.dimensions, 'time')
-    times_offset = extract_dimension(patch_offset_nohead,
-                                     reader_offset.dimensions,
-                                     'time')
+    times = extract_dimension(
+        patch_nohead,
+        reader.dimensions,
+        'time',
+        'dimensional')
+    times_offset = extract_dimension(
+        patch_offset_nohead,
+        reader_offset.dimensions,
+        'time',
+        'dimensional')
     assert float(times_offset[0] - times[0]) == 1300000
-
-
-def extract_dimension(patch, dimensions, name):
-    '''
-    Extract a dimension in a patch with dimensional compression.
-    Returns a numpy array
-    '''
-    # compute the offset needed to find the dimension
-    # first offset is for the patch header
-    offset = 13
-    for dim in dimensions:
-        # skip dimensional type on 1b
-        dimsize = int(struct.unpack('<I', patch[offset + 1: offset + 5])[0])
-        if dim.name == name:
-            # dimension found!
-            break
-        offset += 5 + dimsize
-    return np.fromstring(
-        patch[offset + 5:offset + 5 + dimsize],
-        dtype=dim.type)
