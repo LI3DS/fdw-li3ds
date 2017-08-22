@@ -6,6 +6,7 @@ from binascii import unhexlify
 import pytest
 
 from fdwli3ds import Sbet
+from fdwli3ds.util import extract_dimension
 
 sbet_file = os.path.join(
     os.path.dirname(__file__), 'data', 'sbet', 'sbet.bin')
@@ -37,11 +38,24 @@ def reader_offset(scope='module'):
 
 
 @pytest.fixture
+def reader_overlap(scope='module'):
+    ept = Sbet(
+        options={
+            'sources': sbet_file,
+            'pcid': '1',
+            'overlap': 'true'
+        },
+        columns=None
+    )
+    return ept
+
+
+@pytest.fixture
 def schema(scope='module'):
     ept = Sbet(
         options={
             'sources': sbet_file,
-            'metadata': 'true',
+            'metadata': 'true'
         },
         columns=None
     )
@@ -102,3 +116,21 @@ def test_point_count(reader):
     ])
     point_size = sum(int(dim.size) for dim in reader.dimensions)
     assert allpatch_size / point_size == 50000
+
+
+def test_nonoverlap_patch(reader):
+    read = reader.execute(None, None)
+    first_patch = unhexlify(next(read)['points'])
+    second_patch = unhexlify(next(read)['points'])
+    first_array = extract_dimension(first_patch, reader.dimensions, 'm_time')
+    second_array = extract_dimension(second_patch, reader.dimensions, 'm_time')
+    assert first_array[-1] != second_array[0]
+
+
+def test_overlap_patch(reader_overlap):
+    read = reader_overlap.execute(None, None)
+    first_patch = unhexlify(next(read)['points'])
+    second_patch = unhexlify(next(read)['points'])
+    first_array = extract_dimension(first_patch, reader_overlap.dimensions, 'm_time')
+    second_array = extract_dimension(second_patch, reader_overlap.dimensions, 'm_time')
+    assert first_array[-1] == second_array[0]
