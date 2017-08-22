@@ -41,7 +41,7 @@ class Sbet(ForeignPcBase):
                                      'schemas', 'sbetschema.xml')
         # add overlap option (which add the previous point in each patch and build
         # a continuous timeline for trajectories)
-        self.overlap = strtobool(options.get('overlap', 'False'))
+        self.overlap = strtobool(options.get('overlap', 'True'))
 
     def execute(self, quals, columns):
         # When the metadata parameter has been passed to the foreign table

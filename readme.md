@@ -113,7 +113,7 @@ create foreign table mysbet (
         sources 'data/sbet/sbet.bin'
         , patch_size '100'
         , pcid '2'
-        , overlap 'true' -- overlaps avoids time gaps between patches
+        , overlap 'true' -- overlaps avoids time gaps between patches 'true' by default
 );
 
 

@@ -107,6 +107,7 @@ def test_point_count(reader):
     """
     All patch must have the correct number of points (5000 in the test file)
     """
+    reader.overlap = False
     allpatch = list(reader.execute(None, None))
     # header size for each patch
     header_size = 13
@@ -135,6 +136,7 @@ def test_time_offset(reader_offset, reader):
 
 
 def test_nonoverlap_patch(reader):
+    reader.overlap = False
     read = reader.execute(None, None)
     first_patch = unhexlify(next(read)['points'])
     second_patch = unhexlify(next(read)['points'])
